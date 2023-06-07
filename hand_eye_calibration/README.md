@@ -127,7 +127,9 @@ Before performing the hand-eye calibration, you need to determine at least 15 ca
 5. Check the robot teach pendant, and enter the current robot pose to the **robot_pose** JSON file.
 
    
-    > Note: It is recommended to save the pose on the teach pendant. When performing the hand-eye calibration, you can use the saved poses to move the robot.
+    > Note: 
+    > - The translational component of the robot pose should be entered in mm.
+    > - It is recommended to save the pose on the teach pendant. When performing the hand-eye calibration, you can use the saved poses to move the robot.
 
 6. Repeat steps 2 to 5 to determine more calibration poses.
 
@@ -186,6 +188,8 @@ Please follow these steps to perform the hand-eye calibration.
 
    - If **SUCCESS** is displayed, then the hand-eye calibration has succeeded. In the folder where the sample program is stored, you can find the **ExtrinsicParameters** TXT file that contains the extrinsic parameters and the a point cloud file whose coordinates have been transformed.
    - If an error is displayed, please troubleshoot according to the [displayed error code](#extrinerrcode), and then determine the calibration poses again.
+
+   > Note: The translational component of the extrinsic parameters is in m, and the rotational component is described using quaternions.
 
 ## Supported Euler Angle Conventions
 

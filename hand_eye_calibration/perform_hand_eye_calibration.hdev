@@ -78,7 +78,7 @@
 <l>endfor</l>
 <c>* Feature detection data have been collected at all calibration poses. Start the calculation of extrinsic parameters.</c>
 <l>calibrate_handeye_mmind (AcqHandle, CalibResult, ExtriResult)</l>
-<c>* If calculation succeeded, the extrinsic parameters are stored in a "ExtrinsicParameters" TXT file.</c>
+<c>* If calculation succeeded, the extrinsic parameters are stored in a "ExtrinsicParameters" TXT file. The unit of the translational component is m, and the rotational component is described using quaternions.</c>
 <c></c>
 <c>* Switch the reference frame in which the point cloud is output from the camera and obtain the point cloud.</c>
 <c>* By default, the reference frame is not switched. If you need to output the point cloud in the robot reference frame, please open the following procedure and change the value of the "Scan3dCoordinateTransformEnable" parameter. </c>
@@ -148,7 +148,8 @@
 <l>set_framegrabber_param (AcqHandle, 'CalibrateHandEye', 0)</l>
 <l>wait_seconds(5)</l>
 <l>count_seconds(Start)</l>
-<l>timeout := 10</l>
+<c>* Set the timeout period for calculation.</c>
+<l>timeout := 100</l>
 <l>while (1)</l>
 <l>    wait_seconds(0.5)</l>
 <l>    set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
@@ -340,9 +341,10 @@
 <l>TransformVal := []</l>
 <l>tuple_split (extriResult, ',', tmp)</l>
 <l>tuple_number (tmp, TransformVal)</l>
-<l>transformVal[0] := TransformVal[0]</l>
-<l>transformVal[1] := TransformVal[1]</l>
-<l>transformVal[2] := TransformVal[2]</l>
+<c>*m to mm</c>
+<l>transformVal[0] := TransformVal[0]*1000</l>
+<l>transformVal[1] := TransformVal[1]*1000</l>
+<l>transformVal[2] := TransformVal[2]*1000</l>
 <l>w := TransformVal[3]</l>
 <l>x := TransformVal[4]</l>
 <l>y := TransformVal[5]</l>
