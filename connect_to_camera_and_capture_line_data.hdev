@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* Sample program for connecting to a Mech-Eye 3D Laser Profiler, perform image capturing, and adjust camera parameters using HALCON.</c>
+<c>*</c>
+<c>* Replace "MechEye" with the "user_name" or "unique_name" of the camera to be connected.</c>
+<l>DeviceInfo := 'LNX'</l>
+<c></c>
+<c>* List the available cameras.</c>
+<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameraInfos)</l>
+<l>dev_inspect_ctrl (MechEyeCameraInfos)</l>
+<c></c>
+<c>* Could not find any Mech-Eye 3D Laser Profilers.</c>
+<l>if (not |MechEyeCameraInfos|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Connect to the camera: if "user_Name" or "unique_name" is not set in tuple_regexp_select, the first camera in the list will be connected.</c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameraInfos[0], 0, -1, AcqHandle)</l>
+<c></c>
+<l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
+<c></c>
+<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
+<c></c>
+<c>* Switch the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
+<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c></c>
+<c>* Set the scanning parameters.</c>
+<l>set_framegrabber_param (AcqHandle, 'TriggerSource', 'FixedRate')</l>
+<l>set_framegrabber_param (AcqHandle, 'ExposureMode', 'Timed')</l>
+<l>set_framegrabber_param (AcqHandle, 'ExposureTime', 80)</l>
+<c></c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Mono8')</l>
+<c></c>
+<c>* Obtain the 2D image from the camera.</c>
+<l>grab_image (Image2d, AcqHandle)</l>
+<c>* Save the 2D image result in "Image2d.bmp"</c>
+<l>write_image( Image2d , 'bmp' , 0 , 'Image2d' )</l>
+<c></c>
+<c>* Switch the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Linescan3D')</l>
+<c></c>
+<c>* Open the 3D object model generator.</c>
+<l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
+<l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c></c>
+<c>* Set the scanning parameters.</c>
+<l>set_framegrabber_param (AcqHandle, 'Height', 1600)</l>
+<l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
+<l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
+<c></c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Reflectance')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Mono8')</l>
+<c></c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
+<c></c>
+<c>* Acquire the 3D data from the camera.</c>
+<l>grab_data(Image, Region, Contours, AcqHandle, ObjectModel3D)</l>
+<c></c>
+<c>* Get the reflectance from the 3D data.</c>
+<l>select_obj (Image, reflectance, 1)</l>
+<l>get_image_size (reflectance, reflectanceWidth, reflectanceHeight)</l>
+<c></c>
+<c>* Get the depth from the 3D data.</c>
+<l>select_obj(Image, depthRaw, 2)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', scaleZ)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', offsetZ)</l>
+<l>convert_image_type(depthRaw, depthReal, 'real')</l>
+<l>scale_image(depthReal, depthInMM, scaleZ, offsetZ)</l>
+<c></c>
+<l>clear_object_model_3d (ObjectModel3D)</l>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="addOffset">
+<interface/>
+<body>
+<l>convert_image_type (x, rReal, 'real')</l>
+<l>scale_image (rReal, rRealWithOffest, 1, offest)</l>
+<l>scale_image (rRealWithOffest, rRealWithOffest, scale, 0)</l>
+<l>return ()</l>
+</body>
+<docu id="addOffset">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="decode">
+<interface>
+<io>
+<par name="X" base_type="iconic" dimension="0"/>
+<par name="Y" base_type="iconic" dimension="0"/>
+<par name="Z" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="DecodedX" base_type="iconic" dimension="0"/>
+<par name="DecodedY" base_type="iconic" dimension="0"/>
+<par name="DecodedZ" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Scale" base_type="ctrl" dimension="0"/>
+<par name="Offset" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c></c>
+<l>convert_image_type (X, xReal, 'real')</l>
+<l>scale_image (xReal, DecodedX, Scale, 0)</l>
+<l>scale_image (DecodedX, DecodedX, 1, Offset)</l>
+<c></c>
+<l>convert_image_type (Y, yReal, 'real')</l>
+<l>scale_image (yReal, DecodedY, Scale, 0)</l>
+<l>scale_image (DecodedY, DecodedY, 1, Offset)</l>
+<c></c>
+<l>convert_image_type (Z, zReal, 'real')</l>
+<l>scale_image (zReal, DecodedZ, Scale, 0)</l>
+<l>scale_image (DecodedZ, DecodedZ, 1, Offset)</l>
+<l>return ()</l>
+</body>
+<docu id="decode">
+<parameters>
+<parameter id="DecodedX"/>
+<parameter id="DecodedY"/>
+<parameter id="DecodedZ"/>
+<parameter id="Offset"/>
+<parameter id="Scale"/>
+<parameter id="X"/>
+<parameter id="Y"/>
+<parameter id="Z"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
