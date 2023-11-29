@@ -3,40 +3,45 @@
 <procedure name="main">
 <interface/>
 <body>
+<c>*</c>
 <c>* This sample program is used to perform the hand-eye calibration. </c>
-<c>** Please refer to the README file for detailed explanation of the entire process.</c>
+<c>* Please refer to the README file for detailed explanation of the entire process.</c>
+<c>*</c>
 <c></c>
-<c>* Replace "MechEye" with the "user_name" or "unique_name" of the camera to be connected.</c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
 <l>DeviceInfo := 'MechEye'</l>
-<c></c>
-<c>* List the available cameras.</c>
 <l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
-<l>tuple_regexp_select (DeviceInfos, DeviceInfo, MechEyeCameras)</l>
-<l>dev_inspect_ctrl (DeviceInfos)</l>
-<c></c>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
 <c>* Stop execution if no cameras are found.</c>
 <l>if (not |MechEyeCameras|)</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
-<c>* Connect to the camera: if "user_Name" or "unique_name" is not set in tuple_regexp_select, the first camera in the list will be connected.</c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
 <l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
 <c></c>
+<c>* Obtain the available parameter names.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
-<c></c>
+<c>* Obtain the firmware version of the camera.</c>
 <l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
-<c></c>
-<c>* Stop execution if the camera firmware version is below 2.1.0.</c>
+<c>* Stop execution if the firmware version is lower than 2.1.0.</c>
 <l>if (FirmwareVersion &lt; '2.1.0')</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
+<c>* Set the "grab_timeout" parameter.</c>
+<c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 10000)</l>
-<c>* Switch the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
+<c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
-<c>* Set the camera mounting method: replace "EyeInHnad" with "EyeToHand" if the camera is mounted in the eye-to-hand manner.</c>
+<c>* Set the camera mounting mode.</c>
+<c>* Replace "EyeInHnad" with "EyeToHand" if the camera is mounted in the eye-to-hand mode.</c>
 <l>set_framegrabber_param (AcqHandle, 'CalibrationType', 'EyeInHand')</l>
-<c>* Set the calibration board model: replace "BDB-5" with the calibration board model in use. Possible values include BDB-5, BDB-6, BDB-7, OCB-005, OCB-010, OCB-015, OCB-020, CGB-020, CGB-035, and CGB-050</c>
+<c>* Set the calibration board model.</c>
+<c>* Replace "BDB-5" with the calibration board model in use.</c>
+<c>* Possible values include BDB-5, BDB-6, BDB-7, OCB-005, OCB-010, OCB-015, OCB-020, CGB-020, CGB-035, and CGB-050.</c>
 <l>setboardType('BDB-5',boardType)</l>
 <l>set_framegrabber_param (AcqHandle, 'BoardType', boardType)</l>
 <l>set_framegrabber_param (AcqHandle, 'Test Collect', false)</l>
@@ -46,6 +51,7 @@
 <l>get_dict_tuple(DictJson,'EulerType', EulerType)</l>
 <l>get_dict_tuple(DictJson,'FromDegree', FromDegree)</l>
 <l>get_dict_tuple(DictJson,'pose_count', PoseCount)</l>
+<c></c>
 <c>* Start performing the hand-eye calibration.</c>
 <c>* Read the calibration poses from the "robot_pose" JSON file one by one. </c>
 <l>PatternsResult := []</l>
@@ -59,32 +65,38 @@
 <l>    get_dict_tuple(PoseObj,4,Robot_r2)</l>
 <l>    get_dict_tuple(PoseObj,5,Robot_r3)</l>
 <l>    pose := [Robot_x,Robot_y,Robot_z,Robot_r1,Robot_r2,Robot_r3]</l>
-<c>* Convert the Euler angles to quaternions. If the Euler angle convention used by your robot is not supported, please open the following procedure and add the conversion from this Euler angle convention to quaternions.</c>
+<c>    * Convert the Euler angles to quaternions. </c>
+<c>    * If the Euler angle convention used by your robot is not supported,</c>
+<c>    * please open the following procedure and add the conversion from this Euler angle convention to quaternions.</c>
 <l>    euler_to_quad(pose, EulerType, FromDegree, PoseQuad)</l>
 <l>    PoseStr := PoseQuad[0] + ',' + PoseQuad[1] + ',' + PoseQuad[2] + ',' + PoseQuad[3] + ',' + PoseQuad[4] + ',' + PoseQuad[5] + ',' + PoseQuad[6]</l>
-<c>* Send the current calibration pose to the camera. </c>
+<c>    * Send the current calibration pose to the camera. </c>
 <l>    set_framegrabber_param (AcqHandle, 'PoseData', PoseStr) </l>
-<c>* Add this pose to the extrinsic parameter calculation. </c>
+<c>    * Add this pose to the extrinsic parameter calculation. </c>
 <l>    set_framegrabber_param (AcqHandle, 'AddPose', 0)</l>
-<c>* Move the robot to the next calibration pose in the **robot_pose** JSON file, and then press F5 key to continue running this program.</c>
+<c>    * Move the robot to the next calibration pose in the "robot_pose" JSON file, and then press F5 key to continue running this program.</c>
 <l>    stop()</l>
-<c>* Perform image capturing at the current calibration pose, detect features, and add the feature detection data to the extrinsic parameter calculation.</c>
+<c>    * Perform image capturing at the current calibration pose, detect features, and add the feature detection data to the extrinsic parameter calculation.</c>
 <l>    collect_pattern (AcqHandle, CollectResult)</l>
-<c>* Record the feature detection status at each calibration pose in the "PatternsResult" variable.</c>
+<c>    * Record the feature detection status at each calibration pose in the "PatternsResult" variable.</c>
 <l>    tuple_insert(PatternsResult, 0, CollectResult, PatternsResult)    </l>
 <l>    grab_image(Image, AcqHandle)</l>
 <l>    Text := 'No. of the current calibration pose:' + (I+1) + '\n' + 'Total no. of calibration poses:' + PoseCount + '\n' + 'Feature detection status at current pose:' + CollectResult + '\n' +'Move the robot to the next calibration pose.'</l>
 <l>    dev_disp_text (Text, 'window', 'top', 'center', 'black', 'shadow', false)</l>
 <l>endfor</l>
+<c></c>
 <c>* Feature detection data have been collected at all calibration poses. Start the calculation of extrinsic parameters.</c>
+<c>* If calculation succeeded, the extrinsic parameters are stored in the "ExtrinsicParameters" TXT file. </c>
+<c>* The unit of the translational component is meter, and the rotational component is described using quaternions.</c>
 <l>calibrate_handeye_mmind (AcqHandle, CalibResult, ExtriResult)</l>
-<c>* If calculation succeeded, the extrinsic parameters are stored in a "ExtrinsicParameters" TXT file. The unit of the translational component is m, and the rotational component is described using quaternions.</c>
 <c></c>
 <c>* Switch the reference frame in which the point cloud is output from the camera and obtain the point cloud.</c>
-<c>* By default, the reference frame is not switched. If you need to output the point cloud in the robot reference frame, please open the following procedure and change the value of the "Scan3dCoordinateTransformEnable" parameter. </c>
+<c>* By default, the reference frame is not switched. </c>
+<c>* If you need to output the point cloud in the robot reference frame, please open the following procedure and change the value of the "Scan3dCoordinateTransformEnable" parameter. </c>
+<c>* The point cloud will be saved to the "PointCloud" PLY file.</c>
 <l>captureTranformedPointCloud(AcqHandle,ExtriResult)</l>
-<c>* The point cloud is saved as a "PointCloud" PLY file.</c>
 <c></c>
+<c>* Close the frame grabber.</c>
 <l>close_framegrabber (AcqHandle)</l>
 <c></c>
 </body>
@@ -112,7 +124,7 @@
 <l>    set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
 <c>    * Check whether the above processes have been completed.</c>
 <l>    get_framegrabber_param (AcqHandle, 'CollectStatus', CollectRet)</l>
-<l>    if (CollectRet == 'COLLECT_DONE')      </l>
+<l>    if (CollectRet == 'CollectDone' or CollectRet == 'COLLECT_DONE')      </l>
 <l>      break</l>
 <l>    endif</l>
 <l>    count_seconds(End)   </l>
@@ -155,7 +167,7 @@
 <l>    set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
 <c>    * Check whether the calculation has been completed.</c>
 <l>    get_framegrabber_param (AcqHandle, 'CalibStatus', CalibRet)    </l>
-<l>    if (CalibRet == 'CALIB_DONE')     </l>
+<l>    if (CalibRet == 'CalibDone' or CalibRet == 'CALIB_DONE')     </l>
 <l>      break</l>
 <l>    endif</l>
 <l>    count_seconds(End)</l>
@@ -167,7 +179,7 @@
 <l>get_framegrabber_param (AcqHandle, 'ExtrinErrCode', ErrCode)</l>
 <l>CalibResult := ErrCode</l>
 <c>* If calculation succeeded, store the extrinsic parameters in a "ExtrinsicParameters" TXT file.</c>
-<l>if (ErrCode == 'SUCCESS')</l>
+<l>if (ErrCode == 'Success' or ErrCode == 'SUCCESS')</l>
 <l>    get_framegrabber_param (AcqHandle, 'Extrinsic', ExtriResult)</l>
 <l>    get_system_time (MSecond, Second, Minute, Hour, Day, YDay, Month, Year)</l>
 <l>    path := 'ExtrinsicParameters'+'-'+Hour$'d'+'h'+Minute$'d'+'min'+Second$'d'+'s'+'.txt'</l>

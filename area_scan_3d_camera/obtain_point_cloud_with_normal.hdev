@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera and obtain a textured point cloud with normal.</c>
+<c>*</c>
+<c></c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
+<l>DeviceInfo := 'MechEye'</l>
+<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
+<c>* Stop execution if no cameras are found.</c>
+<l>if (not |MechEyeCameras|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Obtain the firmware version of the camera.</c>
+<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
+<c>* Stop execution if the firmware version is lower than 2.2.0.</c>
+<l>if (FirmwareVersion &lt; '2.2.0')</l>
+<l>    stop()</l>
+<l>endif</l>
+<c>* Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
+<c>* Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<l>if(find(componentSelectorValues,'Range') != -1)</l>
+<c>    * Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_ABC16" to enable the acquisition of the point cloud data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>    set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_ABC16')</l>
+<c>    * Reset the capture region according to the maximum image width and height.</c>
+<l>    get_framegrabber_param (AcqHandle, 'WidthMax', WidthMax)</l>
+<l>    get_framegrabber_param (AcqHandle, 'HeightMax', HeightMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetX', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetY', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Width', WidthMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Height', HeightMax)</l>
+<l>endif</l>
+<c></c>
+<l>if(find(componentSelectorValues,'Normal') != -1)</l>
+<c>    * Set the "ComponentSelector" parameter to "Normal" and the "ComponentEnable" parameter to "true" to enable the acquisition of the normal data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', true)</l>
+<c>    * Reset the capture region according to the maximum image width and height.</c>
+<l>    get_framegrabber_param (AcqHandle, 'WidthMax', WidthMax)</l>
+<l>    get_framegrabber_param (AcqHandle, 'HeightMax', HeightMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetX', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetY', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Width', WidthMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Height', HeightMax)</l>
+<l>endif</l>
+<c></c>
+<c>* Disable the "Intensity" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Intensity') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
+<c></c>
+<c>* Obtain the image from the camera and store it in the "Image" variable.</c>
+<l>grab_data(Image, Region, Contur, AcqHandle, data)</l>
+<c>* Count the number of channels in the acquired image. </c>
+<l>count_obj(Image, ImageChannelCount)</l>
+<c>* Stop execution if the number of channels is smaller than 6.</c>
+<l>if (ImageChannelCount &lt; 6)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Set the "ChunkComponentSelector" to "Range", allowing the retrieval of the point cloud data from the "Range" component.</c>
+<l>set_framegrabber_param (AcqHandle, 'ChunkComponentSelector', 'Range') </l>
+<c>* Convert the data in the first channel of the acquired image to the x-coordinates of the points.</c>
+<l>select_obj(Image, ImageX, 1)</l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateA')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', XScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', XOffset)</l>
+<l>convert_image_type(ImageX, RealImageX, 'real')</l>
+<l>scale_image(RealImageX, X, XScale, XOffset)</l>
+<c></c>
+<c>* Convert the data in the second channel of the acquired image to the y-coordinates of the points.</c>
+<l>select_obj(Image, ImageY, 2)</l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateB')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', YScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', YOffset)</l>
+<l>convert_image_type(ImageY, RealImageY, 'real')</l>
+<l>scale_image(RealImageY, Y, YScale, YOffset)</l>
+<c></c>
+<c>* Convert the data in the third channel of the acquired image to the z-coordinates of the points.</c>
+<l>select_obj(Image, ImageZ, 3)  </l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateC')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', ZScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', ZOffset)</l>
+<l>convert_image_type(ImageZ, RealImageZ, 'real')</l>
+<l>scale_image(RealImageZ, Z, ZScale, ZOffset)</l>
+<c></c>
+<c>* Set the "ChunkComponentSelector" to "Normal", allowing the retrieval of the normal data from the "Normal" component.</c>
+<l>set_framegrabber_param (AcqHandle, 'ChunkComponentSelector', 'Normal')  </l>
+<c>* Convert the data in the fourth channel of the acquired image to the x-coordinates of the normal vector terminal points (the initial point is the origin).</c>
+<l>select_obj(Image, ImageNormalX, 4)</l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateA')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', NormalXScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', NormalXOffset)</l>
+<l>convert_image_type(ImageNormalX, RealNormalX, 'real')</l>
+<l>scale_image(RealNormalX, NormalX, NormalXScale, NormalXOffset)</l>
+<c></c>
+<c>* Convert the data in the fifth channel of the acquired image to the y-coordinates of the normal vector terminal points (the initial point is the origin).</c>
+<l>select_obj(Image, ImageNormalY, 5)</l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateB')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', NormalYScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', NormalYOffset)</l>
+<l>convert_image_type(ImageNormalY, RealNormalY, 'real')</l>
+<l>scale_image(RealNormalY, NormalY, NormalYScale, NormalYOffset)</l>
+<c></c>
+<c>* Convert the data in the sixth channel of the acquired image to the z-coordinates of the normal vector terminal points (the initial point is the origin).</c>
+<l>select_obj(Image, ImageNormalZ, 6)</l>
+<l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateC')</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', NormalZScale)</l>
+<l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', NormalZOffset)</l>
+<l>convert_image_type(ImageNormalZ, RealNormalZ, 'real')</l>
+<l>scale_image(RealNormalZ, NormalZ, NormalZScale, NormalZOffset)</l>
+<c></c>
+<c>* Convert the normal data to a 3-channel image.</c>
+<l>compose3(NormalX, NormalY, NormalZ, NormalAttribImage)</l>
+<c>* Generate an empty 3D object model for storing the point cloud and normal data.</c>
+<l>gen_empty_object_model_3d(ObjectModel3D)</l>
+<c></c>
+<c>* Generate the point cloud with normals.</c>
+<l>NormalAttribNames := ['point_normal_x','point_normal_y','point_normal_z']</l>
+<l>xyz_attrib_to_object_model_3d(X, Y, Z, NormalAttribImage, NormalAttribNames, ObjectModel3D)</l>
+<c></c>
+<c>* Visualize the point cloud with normals. The initial points of normals are translated to each point in the point cloud.</c>
+<l>WindowScale := 0.4</l>
+<l>WindowWidth := WidthMax * WindowScale</l>
+<l>WindowHeight := HeightMax * WindowScale</l>
+<l>dev_open_window (0, 0, WindowWidth, WindowHeight, 'black', WindowHandle3d)</l>
+<l>visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], ['disp_normals', 'normal_color'] , ['true', 'green'], [], [], [], PoseOut)</l>
+<l>dev_close_window ()</l>
+<c></c>
+<c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

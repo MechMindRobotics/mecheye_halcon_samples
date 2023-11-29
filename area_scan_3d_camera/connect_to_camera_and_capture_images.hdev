@@ -4,66 +4,73 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* Sample program for connecting to a Mech-Eye Industrial 3D Camera, perform image capturing, and adjust camera parameters using HALCON.</c>
+<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera, perform image capturing and adjust camera parameters.</c>
 <c>*</c>
-<c>* Replace "MechEye" with the "user_name" or "unique_name" of the camera to be connected.</c>
+<c></c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
 <l>DeviceInfo := 'MechEye'</l>
-<c></c>
-<c>* List the available cameras.</c>
 <l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
-<l>tuple_regexp_select (DeviceInfos, DeviceInfo, MechEyeCameras)</l>
-<l>dev_inspect_ctrl (DeviceInfos)</l>
-<c></c>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
 <c>* Stop execution if no cameras are found.</c>
 <l>if (not |MechEyeCameras|)</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
-<c>* Connect to the camera: if "user_Name" or "unique_name" is not set in tuple_regexp_select, the first camera in the list will be connected.</c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
 <l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
 <c></c>
+<c>* Obtain the available parameter names.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
-<c></c>
+<c>* Set the "grab_timeout" parameter.</c>
+<c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 8000)</l>
+<c>* Set the maximum number of packet gaps allowed in the GigE Vision stream. </c>
+<c>* A packet gap occurs when one or more packets are missing during the data transmission. </c>
+<c>* Setting this parameter to 500 allows a maximum of 500 packet gaps in the stream.</c>
 <l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
-<c></c>
-<c>* Switch the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
+<c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c>* Set the "AcquisitionMode" parameter to "SingleFrame" to obtain one 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'SingleFrame')</l>
-<c></c>
+<c>* Obtain the width, height and pixel format of the 2D image.</c>
 <l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
 <l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
 <l>get_framegrabber_param (AcqHandle, 'PixelFormat', PixelFormat)</l>
-<c></c>
-<c>* Set the "2D Scanning" parameters.</c>
+<c>* Set the "ExposureMode" parameter to "Timed" and the "ExposureTime" parameter to 100 μs.</c>
 <l>set_framegrabber_param (AcqHandle, 'Scan2DExposureMode', 'Timed')</l>
 <l>set_framegrabber_param (AcqHandle, 'Scan2DExposureTime', 100)</l>
 <c></c>
 <c>* Obtain the 2D image from the camera.</c>
 <l>grab_image (Image2d, AcqHandle)</l>
-<c>* Save the 2D image to the "Image2d.bmp" file.</c>
+<c>* Save the 2D image to the "Image2d" BMP file.</c>
 <l>write_image( Image2d , 'bmp' , 0 , 'Image2d' )</l>
 <c></c>
-<c>* Switch the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<c>* Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
 <c></c>
+<c>* Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c></c>
+<c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_ABC16" to enable the acquisition of the point cloud data.</c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_ABC16')</l>
+<c></c>
+<c>* Obtain the width, height and pixel format of 3D object model.</c>
 <l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
 <l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
 <l>get_framegrabber_param (AcqHandle, 'PixelFormat', PixelFormat)</l>
-<c></c>
 <c>* Set the "3D Scanning" parameters.</c>
 <l>set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 1)</l>
 <l>set_framegrabber_param (AcqHandle, 'Scan3DExposureTime', 8)</l>
-<c></c>
 <c>* Set the "Depth Range" parameters (unit: mm).</c>
 <l>set_framegrabber_param (AcqHandle, 'DepthLowerLimit', 1)</l>
 <l>set_framegrabber_param (AcqHandle, 'DepthUpperLimit', 3000)</l>
-<c></c>
-<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
-<c></c>
 <c>* Set the "Point Cloud Processing" parameters.</c>
 <c>* Different camera firmware versions have different "Point Cloud Processing" parameters.</c>
-<l>if (FirmwareVersion &lt; '2.1.0')</l>
+<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
+<l>if (FirmwareVersion &lt; '2.0.3')</l>
 <l>    set_framegrabber_param (AcqHandle, 'CloudOutlierFilterMode', 'Normal')</l>
 <l>    set_framegrabber_param (AcqHandle, 'CloudSmoothMode', 'Normal')</l>
 <l>else</l>
@@ -72,18 +79,29 @@
 <l>    set_framegrabber_param (AcqHandle, 'PointCloudNoiseRemoval', 'Normal')</l>
 <l>    set_framegrabber_param (AcqHandle, 'PointCloudEdgePreservation', 'Normal')</l>
 <l>endif</l>
-<c>        </c>
-<c>* Open the 3D object model generator.</c>
-<l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
-<l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
 <c></c>
+<c>* Disable the "Intensity" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Intensity') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
+<c></c>
+<c>* Disable the "Normal" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Normal') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
+<c></c>
+<c>* Set the "create_objectmodel3d" parameter to "enable" to create a 3D object model from the acquired point cloud data.</c>
+<l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
+<c>* Set the "add_objectmodel3d_overlay_attrib" parameter to "enable" to append the overlay information in the output model in form of an extended attribute. </c>
+<l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
 <c>* Generate the point cloud (stored in the "ObjectModel3D" variable).</c>
 <l>grab_data(Image3d, Region, Contours, AcqHandle, ObjectModel3D)</l>
-<c></c>
+<c>* Obtain the number of points in the point cloud.</c>
 <l>get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
-<c></c>
+<c>* Check if the number of points is zero. If not, save the point cloud to the "PointCloud" PLY file.</c>
 <l>if(NumOfPoints != 0)</l>
-<c>    * Save the point cloud to the "PointCloud.ply" file.</c>
 <l>    write_object_model_3d (ObjectModel3D, 'ply', 'PointCloud.ply', [], [])</l>
 <l>endif</l>
 <c></c>
@@ -92,7 +110,9 @@
 <l>visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], [], [], [], [], [], PoseOut)</l>
 <l>dev_close_window ()</l>
 <c></c>
+<c>* Clear the point cloud data stored in the "ObjectModel3D" variable.</c>
 <l>clear_object_model_3d (ObjectModel3D)</l>
+<c>* Close the frame grabber.</c>
 <l>close_framegrabber (AcqHandle)</l>
 <c></c>
 </body>

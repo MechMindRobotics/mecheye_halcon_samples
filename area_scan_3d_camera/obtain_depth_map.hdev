@@ -4,62 +4,72 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* Sample program for obtaining the depth map from Mech-Eye Industrial 3D Camera. </c>
-<c>* The obtained image contains only the depth  (Z values), instead of all X, Y, and Z values. This reduces the image acquisition time.  </c>
-<c>* To use this sample, the firmware version of the camera must be 2.1.0 or above. You can use Mech-Eye Viewer to upgrade the camera firmware.</c>
+<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera and obtain the depth map.</c>
+<c>* The obtained image contains only the depth (Z values), instead of all X, Y, and Z values. </c>
+<c>*</c>
 <c></c>
-<c>* Replace "MechEye" with the "user_name" or "unique_name" of the camera to be connected.</c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
 <l>DeviceInfo := 'MechEye'</l>
-<c></c>
-<c>* List the available cameras.</c>
 <l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
-<l>tuple_regexp_select (DeviceInfos, DeviceInfo, MechEyeCameras)</l>
-<l>dev_inspect_ctrl (DeviceInfos)</l>
-<c></c>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
 <c>* Stop execution if no cameras are found.</c>
 <l>if (not |MechEyeCameras|)</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
-<c>* Connect to the camera: if "user_Name" or "unique_name" is not set in tuple_regexp_select, the first camera in the list will be connected.</c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
 <l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
 <c></c>
+<c>* Obtain the firmware version of the camera.</c>
 <l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
-<c></c>
-<c>* Stop execution if the camera firmware version is below 2.1.0.</c>
-<l>if (FirmwareVersion &lt; '2.1.0')</l>
+<c>* Stop execution if the firmware version is lower than 2.0.3.</c>
+<l>if (FirmwareVersion &lt; '2.0.3')</l>
 <l>    stop()</l>
 <l>endif</l>
-<c></c>
-<c>* Switch the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<c>* Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
-<c>* Set the "ComponentSelector" parameter to "Range" to allow configuration of the "PixelFormat" parameter.</c>
-<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<c>* Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
 <c></c>
-<c>* Switch "PixelFormat" parameter to "Coord3D_C16 pixel to get only depth map(2D image containing the Z values).</c>
+<c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of only the depth map (2D image containing the Z values).</c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
 <l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
 <c></c>
-<l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
-<l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
+<c>* Disable the "Intensity" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Intensity') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
 <c></c>
-<c>* Acquire the raw data from the camera and convert the data to a depth map.</c>
+<c>* Disable the "Normal" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Normal') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
+<c></c>
+<c>* Acquire the raw data from the camera.</c>
 <l>grab_image(DepthRaw, AcqHandle)</l>
-<c></c>
+<c>* Convert the raw data to depth map.</c>
 <l>set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateC')</l>
 <l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', ScaleZ)</l>
 <l>get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', OffsetZ)</l>
 <l>convert_image_type(DepthRaw, DepthReal, 'real')</l>
 <l>scale_image(DepthReal, DepthInMM, ScaleZ, OffsetZ)</l>
-<c>* Convert the unit of depth values in the depth map from mm to m.</c>
+<c>* Convert the unit of depth values in the depth map from millimeter to meter.</c>
 <l>scale_image(DepthInMM, DepthInM, 0.001, 0)</l>
 <c></c>
-<c>* Configure the Canvas window for displaying the obtained depth map.</c>
+<c>* Visualize the depth map.</c>
+<l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
+<l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
 <l>WindowScale := 0.4</l>
 <l>WindowWidth := Width * WindowScale</l>
 <l>WindowHeight := Height * WindowScale</l>
 <l>dev_open_window (0, 0, WindowWidth, WindowHeight, 'black', WindowHandle3d)</l>
 <l>dev_display (DepthInM)</l>
 <c></c>
+<c>* Close the frame grabber.</c>
 <l>close_framegrabber (AcqHandle)</l>
 <c></c>
 </body>

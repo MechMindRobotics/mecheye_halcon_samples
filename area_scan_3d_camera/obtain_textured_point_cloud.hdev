@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera and obtain a textured point cloud (as a 3D object model).</c>
+<c>*</c>
+<c></c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
+<l>DeviceInfo := 'MechEye'</l>
+<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
+<c>* Stop execution if no cameras are found.</c>
+<l>if (not |MechEyeCameras|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Obtain the firmware version of the camera.</c>
+<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
+<c>* Stop execution if the firmware version is lower than 2.0.3.</c>
+<l>if (FirmwareVersion &lt; '2.0.3')</l>
+<l>    stop()</l>
+<l>endif</l>
+<c>* Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
+<c>* Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<l>if(find(componentSelectorValues,'Range') != -1)</l>
+<c>    * Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_ABC16" to enable the acquisition of the point cloud data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>    set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_ABC16')</l>
+<c>    * Reset the capture region according to the maximum image width and height.</c>
+<l>    get_framegrabber_param (AcqHandle, 'WidthMax', WidthMax)</l>
+<l>    get_framegrabber_param (AcqHandle, 'HeightMax', HeightMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetX', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetY', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Width', WidthMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Height', HeightMax)</l>
+<l>endif</l>
+<l>if(find(componentSelectorValues,'Intensity') != -1)</l>
+<c>    * Set the "ComponentSelector" parameter to "Intensity" and the "ComponentEnable" parameter to "true" to enable the acquisition of the 2D image data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', true)   </l>
+<c>    * For the LSR (V4) and DEEP (V4) series, configure the "SourceSelector" parameter to obtain either the "2D image (texture)" or the "2D image (depth source)".</c>
+<c>    * "Color": obtain the "2D image (texture)" (default value)</c>
+<c>    * "Monochrome": obtain the "2D image (depth source)"</c>
+<l>    * set_framegrabber_param (AcqHandle, 'SourceSelector', 'Monochrome')</l>
+<c>    * Reset the capture region according to the maximum image width and height.</c>
+<l>    get_framegrabber_param (AcqHandle, 'WidthMax', WidthMax)</l>
+<l>    get_framegrabber_param (AcqHandle, 'HeightMax', HeightMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetX', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'OffsetY', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Width', WidthMax)</l>
+<l>    set_framegrabber_param (AcqHandle, 'Height', HeightMax)</l>
+<l>endif</l>
+<c></c>
+<c>* Disable the "Normal" component to avoid obtaining unneeded data.</c>
+<l>if(find(componentSelectorValues,'Normal') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>endif</l>
+<c></c>
+<c>* Set the "create_objectmodel3d" parameter to "enable" to create a 3D object model from the acquired point cloud data.</c>
+<l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
+<c>* Set the "add_objectmodel3d_overlay_attrib" parameter to "enable" to append the overlay information in the output model in form of an extended attribute. </c>
+<l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
+<c>* Generate the point cloud (stored in the "ObjectModel3D" variable).</c>
+<l>grab_data(Image, Region, Contur, AcqHandle, ObjectModel3D)</l>
+<c>* Obtain the value of the extended attribute of the 3D object models and store it in the "ColorAttribute" variable. </c>
+<l>get_object_model_3d_params(ObjectModel3D, 'extended_attribute_names' , ColorAttribute)</l>
+<c>* Check if the acquired 2D image is a single-channel grayscale image. If so, convert it to a three-channel image.</c>
+<l>if(ColorAttribute = '&amp;overlay_gray')</l>
+<l>    ColorAttribute := ['&amp;overlay_gray','&amp;overlay_gray','&amp;overlay_gray']</l>
+<l>endif</l>
+<c></c>
+<c>* Visualize the textured point cloud.</c>
+<l>WindowScale := 0.4</l>
+<l>WindowWidth := WidthMax * WindowScale</l>
+<l>WindowHeight := HeightMax * WindowScale</l>
+<l>dev_open_window (0, 0, WindowWidth, WindowHeight, 'black', WindowHandle3d)</l>
+<l>visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], ['blue_channel_attrib', 'green_channel_attrib', 'red_channel_attrib'] , [ColorAttribute], [], [], [], PoseOut)</l>
+<l>dev_close_window ()</l>
+<c></c>
+<c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

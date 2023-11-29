@@ -4,28 +4,27 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* Sample program for checking and setting the IP address, subnetmask, and gateway of Mech-Eye Industrial 3D Camera. </c>
+<c>* With this sample, you can check and set the IP address, subnetmask, and gateway of a Mech-Eye Industrial 3D Camera. </c>
 <c>* Changes of the IP settings take effect after the camera is restarted.</c>
-<c>* Replace "MechEye" with the "user_name" or "unique_name" of the camera to be connected.</c>
+<c>* </c>
+<c></c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
 <l>DeviceInfo := 'MechEye'</l>
-<c></c>
-<c>* List the available cameras.</c>
 <l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
-<l>tuple_regexp_select (DeviceInfos, DeviceInfo, MechEyeCameras)</l>
-<l>dev_inspect_ctrl (DeviceInfos)</l>
-<c></c>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
 <c>* Stop execution if no cameras are found.</c>
 <l>if (not |MechEyeCameras|)</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
-<c>* Connect to the camera: if "user_Name" or "unique_name" is not set in tuple_regexp_select, the first camera in the list will be connected.</c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
 <l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
 <c></c>
+<c>* Obtain the available parameter names.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
-<c></c>
 <c>* Obtain the current camera IP address, subnet mask, and default gateway.</c>
-<l>dev_close_inspect_ctrl (DeviceInfos)</l>
 <l>try </l>
 <l>    get_framegrabber_param (AcqHandle, 'GevCurrentIPAddress', CurrentIPAddress)</l>
 <l>    get_framegrabber_param (AcqHandle, 'GevCurrentSubnetMask', CurrentSubnetMask)</l>
@@ -33,10 +32,7 @@
 <l>catch (Exception)</l>
 <c>    * Stop execution if the above nodes are not available.</c>
 <l>    stop()</l>
-<l>    dev_close_inspect_ctrl (DeviceInfos)</l>
-<l>    dev_inspect_ctrl (DeviceInfos)</l>
 <l>endtry</l>
-<l>dev_close_inspect_ctrl (DeviceInfos)</l>
 <c></c>
 <c>* Transform the obtained camera IP address, subnet mask, and default gateway into the readable string format.</c>
 <l>CurrentIPAddressString := (rsh(CurrentIPAddress, 24) band 0xff) + '.' + (rsh(CurrentIPAddress, 16) band 0xff) + '.' + (rsh(CurrentIPAddress, 8) band 0xff) + '.' + (rsh(CurrentIPAddress, 0) band 0xff)</l>
@@ -44,7 +40,6 @@
 <l>CurrentDefaultGatewayString := (rsh(CurrentDefaultGateway, 24) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 16) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 8) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 0) band 0xff)</l>
 <c></c>
 <c>* For static IP address: enter the new camera IP address, subnet mask, and default gateway in the string format.</c>
-<l>dev_inspect_ctrl (DeviceInfos)</l>
 <l>IPAddressString := '192.168.20.121'</l>
 <l>SubnetMaskString := '255.255.255.0'</l>
 <l>DefaultGatewayString := '192.168.1.1'</l>
@@ -66,14 +61,13 @@
 <c>    * For static IP address: set the new camera IP address, subnet mask and default gateway into the camera.</c>
 <l>    set_framegrabber_param (AcqHandle, 'GevPersistentIPAddress', IPAddress)</l>
 <l>    set_framegrabber_param (AcqHandle, 'GevPersistentSubnetMask', SubnetMask)</l>
-<l>    dev_close_inspect_ctrl (Exception)</l>
 <l>    set_framegrabber_param (AcqHandle, 'GevPersistentDefaultGateway', DefaultGateway)</l>
 <l>catch (Exception)</l>
 <c>    * Stop execution if the above nodes are not available.</c>
-<l>    dev_inspect_ctrl (Exception)</l>
 <l>    stop()</l>
 <l>endtry</l>
 <c></c>
+<c>* Close the frame grabber.</c>
 <l>close_framegrabber (AcqHandle)</l>
 <c></c>
 </body>
