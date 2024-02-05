@@ -4,7 +4,7 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera and obtain a textured point cloud with normal.</c>
+<c>* With this sample, you can connect to a Mech-Eye Industrial 3D Camera and obtain a textured point cloud with normals.</c>
 <c>*</c>
 <c></c>
 <c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>

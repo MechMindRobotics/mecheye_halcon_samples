@@ -116,6 +116,7 @@
 <body>
 <l>CollectResult := []</l>
 <c>* Start performing image capturing at the current calibration pose, detecting features, and adding the feature detection data to the extrinsic parameter calculation.</c>
+<l>wait_seconds(1)</l>
 <l>set_framegrabber_param (AcqHandle, 'CollectPatternOnce', 0)</l>
 <l>count_seconds(Start)</l>
 <l>timeout := 10</l>

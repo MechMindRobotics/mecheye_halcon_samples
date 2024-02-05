@@ -62,6 +62,12 @@
 <l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
 <l>get_framegrabber_param (AcqHandle, 'PixelFormat', PixelFormat)</l>
 <c>* Set the "3D Scanning" parameters.</c>
+<l>if(find(ParameterValues, 'LaserFringeCodingMode') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'LaserFringeCodingMode', 'Fast')</l>
+<l>endif</l>
+<l>if(find(ParameterValues, 'ProjectorFringeCodingMode') != -1)</l>
+<l>    set_framegrabber_param (AcqHandle, 'ProjectorFringeCodingMode', 'Fast')</l>
+<l>endif</l>
 <l>set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 1)</l>
 <l>set_framegrabber_param (AcqHandle, 'Scan3DExposureTime', 8)</l>
 <c>* Set the "Depth Range" parameters (unit: mm).</c>
