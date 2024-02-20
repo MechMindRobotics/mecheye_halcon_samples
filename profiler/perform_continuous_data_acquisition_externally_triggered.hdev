@@ -120,8 +120,11 @@
 <l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', offsetZ)</l>
 <c>    * Transform the Z values using the scaling factor and offset.</c>
 <l>    convert_image_type(depthRaw, depthReal, 'real')</l>
+<c>    * Filter out the points with invalid depth values.</c>
+<l>    threshold(depthReal, validRegion, 1e-30, 'max')</l>
+<l>    reduce_domain(depthReal, validRegion, depthValid) </l>
 <c>    * Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
-<l>    scale_image(depthReal, depthInMM, scaleZ, offsetZ)</l>
+<l>    scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
 <c>    * Clear the 3D object model stored in the variable "ObjectModel3D", preparing it for further processing or storage of new data. </c>
 <l>    clear_object_model_3d (ObjectModel3D)</l>
 <l>endfor</l>
