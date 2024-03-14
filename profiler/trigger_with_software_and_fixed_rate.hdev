@@ -5,24 +5,22 @@
 <body>
 <c>*</c>
 <c>* With this sample, you can perform one round of data acquisition and obtain the profile data (including intensity and depth data).</c>
-<c>* In this sample, the data acquisition is triggered by the externally input signals, and the scanning of each line is triggered at a fixed rate.</c>
-<c>* Attention: This sample is not applicable to LNX-8080A.</c>
+<c>* In this sample, the data acquisition is triggered by the software, and the scanning of each line is triggered at a fixed rate.</c>
 <c>*</c>
 <c></c>
 <c>* Discover all available laser profilers and store them in the "MechEyeProfilerInfos" variable.</c>
 <c>* You can replace "LNX" with the "user_name" or "unique_name" of the laser profiler to be connected.</c>
 <l>DeviceInfo := 'LNX'</l>
 <l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
-<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameraInfos)</l>
-<l>dev_inspect_ctrl (MechEyeCameraInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeProfilerInfos)</l>
+<l>dev_inspect_ctrl (MechEyeProfilerInfos)</l>
 <c>* Stop execution if no laser profilers are found.</c>
-<l>if (not |MechEyeCameraInfos|)</l>
+<l>if (not |MechEyeProfilerInfos|)</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
 <c>* Connect to the laser profiler: if "user_name" or "unique_name" is not set in "DeviceInfo", the first laser profiler in "MechEyeProfilersInfos" will be connected. </c>
-<l>DeviceName := MechEyeCameraInfos[0]</l>
-<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', DeviceName, 0, -1, AcqHandle)</l>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
 <c></c>
 <c>* Obtain the available parameter names and firmware version of the laser profiler.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
@@ -68,19 +66,18 @@
 <l>if (Index == 5)</l>
 <l>    stop()</l>
 <l>endif</l>
-<c></c>
-<c>* Set the "AcquisitionMode" to "SingleFrame", so that the laser profiler performs a single round of data acquisition.</c>
-<l>set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'SingleFrame')</l>
-<c>* Set the "DataAcquisitionTriggerSource" parameter to "External", so that data acquisition is triggered by an external signal.</c>
-<c>* For Mech-Eye LNX-8080A: Comment out the following line.</c>
-<l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'External')</l>
 <c>* Set the "create_objectmodel3d" parameter to "enable" to create a 3D object model from the acquired profile data.</c>
 <l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
 <c>* Set the "add_objectmodel3d_overlay_attrib" parameter to "enable" to add an overlay to the 3D object model using the intensity data.</c>
 <l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
 <c>* Obtain the available options of the "ComponentSelector" parameter.</c>
 <l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
-<c></c>
+<c>* Set the "DataAcquisitionTriggerSource" parameter to "Software", so that data acquisition is triggered by the software.</c>
+<c>* For Mech-Eye LNX-8080A: Comment out the following line.</c>
+<l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'Software')</l>
+<c>* Set the "TriggerMode" parameter to "Off".</c>
+<c>* The "TriggerMode" parameter controls if the selected trigger is active. </c>
+<l>set_framegrabber_param (AcqHandle, 'TriggerMode', 'Off') </l>
 <c>* Set the "LineScanTriggerSource" parameter to "FixedRate", so that the scanning of each line is triggered at a fixed rate.</c>
 <c>* The fixed rate is set through the "AcquisitionLineRate" parameter.</c>
 <l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>
@@ -100,17 +97,11 @@
 <l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
 <l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
 <c></c>
-<c>* Make sure that the external device sends a data acquisition trigger signal to the laser profiler after "grab_data()" is called.</c>
-<c></c>
 <c>* Acquire the 3D data from the laser profiler.</c>
 <l>grab_data(Image, Region, Contours, AcqHandle, ObjectModel3D)</l>
-<c>* Note: If you intend to use the "AcquisitionStatusSelector" and "AcquisitionStatus" parameters to determine the status of the laser profiler:</c>
-<c>* After "grab_data()" is called, the laser profiler does not enter the "AcquisitionTriggerWait" status immediately, and "grab_data()" cannot be called again at this time.</c>
-<c>* Generally, it takes less than 1 second for the laser profiler to enter the "AcquisitionTriggerWait" status. However, if the data acquisition was stopped by an externally input signal, it may take around 6 seconds.</c>
-<c></c>
 <c>* Select the "Reflectance" component (intensity data) from the acquired data and store it to the variable "reflectance". </c>
 <l>select_obj (Image, reflectance, 1)</l>
-<c>* Get the width and height of the "reflectance" image and store the values in the variables "reflectanceWidth" and "reflectanceHeight".</c>
+<c>* Get the width and height of the intensity image and store the values in the variables "reflectanceWidth" and "reflectanceHeight".</c>
 <l>get_image_size (reflectance, reflectanceWidth, reflectanceHeight)</l>
 <c>* Select the "Range" component (depth data) from the acquired data and store it to the variable "depthRaw".</c>
 <l>select_obj(Image, depthRaw, 2)</l>
@@ -134,63 +125,6 @@
 </body>
 <docu id="main">
 <parameters/>
-</docu>
-</procedure>
-<procedure name="addOffset">
-<interface/>
-<body>
-<l>convert_image_type (x, rReal, 'real')</l>
-<l>scale_image (rReal, rRealWithOffest, 1, offest)</l>
-<l>scale_image (rRealWithOffest, rRealWithOffest, scale, 0)</l>
-<l>return ()</l>
-</body>
-<docu id="addOffset">
-<parameters/>
-</docu>
-</procedure>
-<procedure name="decode">
-<interface>
-<io>
-<par name="X" base_type="iconic" dimension="0"/>
-<par name="Y" base_type="iconic" dimension="0"/>
-<par name="Z" base_type="iconic" dimension="0"/>
-</io>
-<oo>
-<par name="DecodedX" base_type="iconic" dimension="0"/>
-<par name="DecodedY" base_type="iconic" dimension="0"/>
-<par name="DecodedZ" base_type="iconic" dimension="0"/>
-</oo>
-<ic>
-<par name="Scale" base_type="ctrl" dimension="0"/>
-<par name="Offset" base_type="ctrl" dimension="0"/>
-</ic>
-</interface>
-<body>
-<c></c>
-<l>convert_image_type (X, xReal, 'real')</l>
-<l>scale_image (xReal, DecodedX, Scale, 0)</l>
-<l>scale_image (DecodedX, DecodedX, 1, Offset)</l>
-<c></c>
-<l>convert_image_type (Y, yReal, 'real')</l>
-<l>scale_image (yReal, DecodedY, Scale, 0)</l>
-<l>scale_image (DecodedY, DecodedY, 1, Offset)</l>
-<c></c>
-<l>convert_image_type (Z, zReal, 'real')</l>
-<l>scale_image (zReal, DecodedZ, Scale, 0)</l>
-<l>scale_image (DecodedZ, DecodedZ, 1, Offset)</l>
-<l>return ()</l>
-</body>
-<docu id="decode">
-<parameters>
-<parameter id="DecodedX"/>
-<parameter id="DecodedY"/>
-<parameter id="DecodedZ"/>
-<parameter id="Offset"/>
-<parameter id="Scale"/>
-<parameter id="X"/>
-<parameter id="Y"/>
-<parameter id="Z"/>
-</parameters>
 </docu>
 </procedure>
 </hdevelop>

@@ -36,11 +36,15 @@ This section describes the method for connecting to a specific laser profiler. T
 
 ## Description of Samples
 
-* [perform_continuous_data_acquisition_externally_triggered](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/perform_continuous_data_acquisition_externally_triggered.hdev):  
-  Perform rounds of data acquisition continously and obtain the profile data (including intensity and depth data). Each round of data acquisition is triggered by the externally input signals, and the scanning of each line is triggered at a fixed rate.
-* [perform_continuous_data_acquisition_software_triggered](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/perform_continuous_data_acquisition_externally_triggered.hdev):  
-  Perform rounds of data acquisition continously and obtain the profile data (including intensity and depth data). Each round of data acquisition is triggered by the software, and the scanning of each line is triggered at a fixed rate.
-* [perform_single_round_of_data_acquisition_externally_triggered](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/perform_continuous_data_acquisition_externally_triggered.hdev):  
-  Perform one round of data acquisition, and obtain the profile data (including intensity and depth data). The data acquisition is triggered by the externally input signals, and the scanning of each line is triggered at a fixed rate.
-* [perform_single_round_of_data_acquisition_software_triggered](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/perform_continuous_data_acquisition_externally_triggered.hdev):  
-  Perform one round of data acquisition, and obtain the profile data (including intensity and depth data). The data acquisition is triggered by the software, and the scanning of each line is triggered at a fixed rate.
+* [trigger_with_software_and_fixed_rate](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_software_and_fixed_rate.hdev):  
+  Trigger one round of data acquisition with the signals input from software, trigger line scans at a fixed rate, and then retrieve the acquired data.
+* [trigger_with_external_device_and_fixed_rate](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_external_device_and_fixed_rate.hdev):  
+  Trigger data acquisition with signals input from the external device, trigger line scans at a fixed rate, and then retrieve the acquired data.
+* [trigger_with_software_and_encoder](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_software_and_encoder.hdev):  
+  Trigger data acquisition with signals input from software, trigger line scans with signals input from the encoder, and then retrieve the acquired data.
+* [trigger_with_external_device_and_encoder](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_external_device_and_encoder.hdev):  
+  Trigger data acquisition with signals input from the external device, trigger line scans with signals input from the encoder, and then retrieve the acquired data.
+* [trigger_with_software_and_fixed_rate_continuous](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_software_and_fixed_rate_continuous.hdev):  
+  Trigger multiple rounds of data acquisition with the signals input from software, trigger line scans at a fixed rate, and then retrieve the acquired data.
+* [trigger_with_external_device_and_fixed_rate_continuous](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_external_device_and_fixed_rate_continuous.hdev):  
+  Trigger multiple rounds of data acquisition with signals input from the external device, trigger line scans at a fixed rate, and then retrieve the acquired data.

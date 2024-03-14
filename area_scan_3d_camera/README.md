@@ -40,9 +40,9 @@ This section describes the method for connecting to a specific camera. This meth
 ## Description of Samples
 
 * [connect_to_camera_and_capture_images](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/connect_to_camera_and_capture_images.hdev):  
-  Connect to the camera, obtain the 2D image and point cloud, and adjust the camera parameters.
+  Connect to the camera, adjust camera parameters, and acquire the 2D image and point cloud.
 * [configure_camera_ip_address](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/configure_camera_ip_address.hdev):  
-  Obtain the current IP address, subnet mask, and gateway settings of the camera and modify these settings.
+  Obtain and modify the IP address, subnet mask, and gateway settings of the camera.
 * [obtain_depth_map](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/obtain_depth_map.hdev):  
   Obtain the depth map only, which is a 2D image that contains only the Z values of the points. Intended for reducing cycle time.
 * [obtain_textured_point_cloud](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/obtain_textured_point_cloud.hdev):  
