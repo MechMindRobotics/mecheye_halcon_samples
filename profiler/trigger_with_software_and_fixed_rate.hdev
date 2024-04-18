@@ -20,7 +20,7 @@
 <l>endif</l>
 <c></c>
 <c>* Connect to the laser profiler: if "user_name" or "unique_name" is not set in "DeviceInfo", the first laser profiler in "MechEyeProfilersInfos" will be connected. </c>
-<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
+<l>open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
 <c></c>
 <c>* Obtain the available parameter names and firmware version of the laser profiler.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
@@ -82,8 +82,6 @@
 <c>* The fixed rate is set through the "AcquisitionLineRate" parameter.</c>
 <l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>
 <c>* Set the "AcquisitionLineRate" parameter to 2000 Hz.</c>
-<c>* Attention: If the ratio of "Height" to "AcquisitionLineRate" is greater than 10, an error will occur during data acquisition.</c>
-<c>* Therefore, make sure the ratio of these two parameter is no greater than 10.</c>
 <l>set_framegrabber_param (AcqHandle, 'AcquisitionLineRate', 2000)</l>
 <c>* Set the "Height" of image to 1600, which is equal to the number of lines to be scanned.</c>
 <l>set_framegrabber_param (AcqHandle, 'Height', 1600 )</l>
@@ -116,6 +114,23 @@
 <l>reduce_domain(depthReal, validRegion, depthValid) </l>
 <c>* Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
 <l>scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<c></c>
+<l>if (FirmwareVersion &gt; '2.3.1')</l>
+<c>    * Obtain the number of points in the point cloud.</c>
+<l>    get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
+<c>    * Check if the number of points is zero. If not, save the point cloud to the "PointCloud" PLY file.</c>
+<l>    if(NumOfPoints != 0)</l>
+<l>        write_object_model_3d (ObjectModel3D, 'ply', 'PointCloud.ply', [], [])</l>
+<l>    endif</l>
+<c>    </c>
+<c>    * Visualize the point cloud.</c>
+<c>    * Note: If the value of the "Height" parameter is greater than 32768, the visualization window cannot open, and the error with code 5122 will be raised.</c>
+<c>    * In that case, please deactivate lines 124 to 126.</c>
+<l>    dev_open_window (0, 0, Width, Height, 'black', WindowHandle3d)</l>
+<l>    visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], [], [], [], [], [], PoseOut)</l>
+<l>    dev_close_window ()</l>
+<l>endif</l>
+<c></c>
 <c>* Clear the 3D object model stored in the variable "ObjectModel3D", preparing it for further processing or storage of new data. </c>
 <l>clear_object_model_3d (ObjectModel3D)</l>
 <c></c>

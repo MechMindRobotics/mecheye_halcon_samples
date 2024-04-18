@@ -21,7 +21,7 @@
 <l>endif</l>
 <c></c>
 <c>* Connect to the laser profiler: if "user_name" or "unique_name" is not set in "DeviceInfo", the first laser profiler in "MechEyeProfilersInfos" will be connected. </c>
-<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
+<l>open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
 <c></c>
 <c>* Obtain the available parameter names and firmware version of the laser profiler.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
@@ -91,8 +91,6 @@
 <c>* The fixed rate is set through the "AcquisitionLineRate" parameter.</c>
 <l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>
 <c>* Set the "AcquisitionLineRate" parameter to 2000 Hz.</c>
-<c>* Alert: If the ratio of "Height" to "AcquisitionLineRate" is greater than 10, an error will occur during data acquisition.</c>
-<c>* Therefore, make sure the ratio of these two parameter is no greater than 10.</c>
 <l>set_framegrabber_param (AcqHandle, 'AcquisitionLineRate', 2000) </l>
 <c></c>
 <c>* Start the continuous data acquisition process.</c>

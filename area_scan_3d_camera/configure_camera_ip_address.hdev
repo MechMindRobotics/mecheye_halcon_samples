@@ -42,7 +42,7 @@
 <c>* For static IP address: enter the new camera IP address, subnet mask, and default gateway in the string format.</c>
 <l>IPAddressString := '192.168.20.121'</l>
 <l>SubnetMaskString := '255.255.255.0'</l>
-<l>DefaultGatewayString := '192.168.1.1'</l>
+<l>DefaultGatewayString := '192.168.20.1'</l>
 <c></c>
 <c>* Transform the strings to integers (hexadecimal).</c>
 <l>tuple_split(IPAddressString, '.', IPAddressParts)</l>
