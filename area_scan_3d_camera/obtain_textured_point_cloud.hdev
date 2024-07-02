@@ -72,6 +72,12 @@
 <l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
 <c>* Generate the point cloud (stored in the "ObjectModel3D" variable).</c>
 <l>grab_data(Image, Region, Contur, AcqHandle, ObjectModel3D)</l>
+<c></c>
+<c>* Stop execution if the number of points is zero. Please adjust parameters (such as "ROI" or "Depth Range") and retry.</c>
+<l>get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
+<l>if(NumOfPoints == 0)</l>
+<l>   stop()</l>
+<l>endif</l>
 <c>* Obtain the value of the extended attribute of the 3D object models and store it in the "ColorAttribute" variable. </c>
 <l>get_object_model_3d_params(ObjectModel3D, 'extended_attribute_names' , ColorAttribute)</l>
 <c>* Check if the acquired 2D image is a single-channel grayscale image. If so, convert it to a three-channel image.</c>
