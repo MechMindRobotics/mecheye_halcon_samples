@@ -27,6 +27,12 @@
 <l>if (FirmwareVersion &lt; '2.2.0')</l>
 <l>    stop()</l>
 <l>endif</l>
+<c></c>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
+<c></c>
 <c>* Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
 <c>* Obtain the available options of the "ComponentSelector" parameter.</c>

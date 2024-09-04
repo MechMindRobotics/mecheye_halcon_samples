@@ -32,23 +32,18 @@
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
 <c>* Set the maximum number of packet gaps allowed in the GigE Vision stream. </c>
 <c>* A packet gap occurs when one or more packets are missing during the data transmission. </c>
 <c>* Setting this parameter to 500 allows a maximum of 500 packet gaps in the stream.</c>
 <l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
-<c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the raw image.</c>
-<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c></c>
 <c>* Set the "ExposureMode" parameter to "Timed" and the "ExposureTime" parameter to 80 μs.</c>
 <l>set_framegrabber_param (AcqHandle, 'ExposureMode', 'Timed')</l>
 <l>set_framegrabber_param (AcqHandle, 'ExposureTime', 80)</l>
-<c>* Set the "ComponentSelector" parameter to "Intensity" and the "PixelFormat" parameter to "Mono8" to obtain the raw image. </c>
-<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
-<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Mono8')</l>
-<c></c>
-<c>* Obtain the raw image from the laser profiler.</c>
-<l>grab_image (RawImage, AcqHandle)</l>
-<c>* Save the raw image to the "RawImage" BMP file.</c>
-<l>write_image( RawImage , 'bmp' , 0 , 'RawImage' )</l>
 <c></c>
 <c>* Set the "DeviceScanType" parameter to "Linescan3D" to obtain the profile data.</c>
 <c>* If the laser profiler has not fully completed the data acquisition, the "DeviceScanType" parameter may be locked.</c>
@@ -75,6 +70,8 @@
 <c>* Set the "DataAcquisitionTriggerSource" parameter to "Software", so that data acquisition is triggered by the software.</c>
 <c>* For Mech-Eye LNX-8080A: Comment out the following line.</c>
 <l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'Software')</l>
+<c>* Set the "AcquisitionMode" to "SingleFrame", so that the laser profiler performs a single round of data acquisition.</c>
+<l>set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'SingleFrame')</l>
 <c>* Set the "TriggerMode" parameter to "Off".</c>
 <c>* The "TriggerMode" parameter controls if the selected trigger is active. </c>
 <l>set_framegrabber_param (AcqHandle, 'TriggerMode', 'Off') </l>
