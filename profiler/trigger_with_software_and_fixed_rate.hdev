@@ -32,23 +32,18 @@
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
 <c>* Set the maximum number of packet gaps allowed in the GigE Vision stream. </c>
 <c>* A packet gap occurs when one or more packets are missing during the data transmission. </c>
 <c>* Setting this parameter to 500 allows a maximum of 500 packet gaps in the stream.</c>
 <l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
-<c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the raw image.</c>
-<l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c></c>
 <c>* Set the "ExposureMode" parameter to "Timed" and the "ExposureTime" parameter to 80 μs.</c>
 <l>set_framegrabber_param (AcqHandle, 'ExposureMode', 'Timed')</l>
 <l>set_framegrabber_param (AcqHandle, 'ExposureTime', 80)</l>
-<c>* Set the "ComponentSelector" parameter to "Intensity" and the "PixelFormat" parameter to "Mono8" to obtain the raw image. </c>
-<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
-<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Mono8')</l>
-<c></c>
-<c>* Obtain the raw image from the laser profiler.</c>
-<l>grab_image (RawImage, AcqHandle)</l>
-<c>* Save the raw image to the "RawImage" BMP file.</c>
-<l>write_image( RawImage , 'bmp' , 0 , 'RawImage' )</l>
 <c></c>
 <c>* Set the "DeviceScanType" parameter to "Linescan3D" to obtain the profile data.</c>
 <c>* If the laser profiler has not fully completed the data acquisition, the "DeviceScanType" parameter may be locked.</c>
@@ -75,6 +70,8 @@
 <c>* Set the "DataAcquisitionTriggerSource" parameter to "Software", so that data acquisition is triggered by the software.</c>
 <c>* For Mech-Eye LNX-8080A: Comment out the following line.</c>
 <l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'Software')</l>
+<c>* Set the "AcquisitionMode" to "SingleFrame", so that the laser profiler performs a single round of data acquisition.</c>
+<l>set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'SingleFrame')</l>
 <c>* Set the "TriggerMode" parameter to "Off".</c>
 <c>* The "TriggerMode" parameter controls if the selected trigger is active. </c>
 <l>set_framegrabber_param (AcqHandle, 'TriggerMode', 'Off') </l>
@@ -121,6 +118,12 @@
 <c>    * Check if the number of points is zero. If not, save the point cloud to the "PointCloud" PLY file.</c>
 <l>    if(NumOfPoints != 0)</l>
 <l>        write_object_model_3d (ObjectModel3D, 'ply', 'PointCloud.ply', [], [])</l>
+<c>        * Uncomment this function if you would like to retrieve the point cloud in the custom reference frame.</c>
+<c>        * The custom reference frame can be adjusted using the "Custom Reference Frame" tool in Mech-Eye</c>
+<c>        * Viewer. The rigid body transformations are automatically calculated after the settings in this</c>
+<c>        * tool have been applied. The "Custom Reference Frame" tool is recommended as the GUI allows you to</c>
+<c>        * adjust the reference frame easily and conveniently.</c>
+<l>        * transformAndSavePointCloud(AcqHandle,ObjectModel3D) </l>
 <l>    endif</l>
 <c>    </c>
 <c>    * Visualize the point cloud.</c>
@@ -140,6 +143,51 @@
 </body>
 <docu id="main">
 <parameters/>
+</docu>
+</procedure>
+<procedure name="transformAndSavePointCloud">
+<interface>
+<ic>
+<par name="AcqHandle" base_type="ctrl" dimension="0"/>
+<par name="ObjectModel3D" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* Define a default transformation matrix.</c>
+<l>hom_mat3d_identity( HomMat3D )</l>
+<c>* Obtain the Euler angles and translation vector.</c>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'RotationX')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue',AngleX)</l>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'RotationY')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue',AngleY)</l>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'RotationZ')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue',AngleZ)</l>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'TranslationX')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue', Tx)</l>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'TranslationY')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue', Ty)</l>
+<l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'TranslationZ')</l>
+<l>get_framegrabber_param (AcqHandle, 'Scan3dTransformValue', Tz)</l>
+<c>* Convert the Euler angles to radians.</c>
+<l>AngleX := AngleX * (3.141592653589793 / 180)</l>
+<l>AngleY := AngleY * (3.141592653589793 / 180)</l>
+<l>AngleZ := AngleZ * (3.141592653589793 / 180)</l>
+<c>* Add the rotations to the HomMat3D matrix.</c>
+<l>hom_mat3d_rotate(HomMat3D, AngleX,'x',0, 0, 0, HomMat3D) </l>
+<l>hom_mat3d_rotate(HomMat3D, AngleY,'y',0, 0, 0, HomMat3D)</l>
+<l>hom_mat3d_rotate(HomMat3D, AngleZ,'z',0, 0, 0, HomMat3D)  </l>
+<c>* Add the translations to the HomMat3D matrix.</c>
+<l>hom_mat3d_translate( HomMat3D, Tx, Ty, Tz, HomMat3D)</l>
+<c>* Use the HomMat3D matrix to transform the 3D object model.</c>
+<l>affine_trans_object_model_3d(ObjectModel3D,HomMat3D,TransformedPointCloud)</l>
+<c>* Save the transformed point cloud to the "TransformedPointCloud" PLY file.</c>
+<l>write_object_model_3d (TransformedPointCloud, 'ply', 'TransformedPointCloud.ply', [], [])</l>
+</body>
+<docu id="transformAndSavePointCloud">
+<parameters>
+<parameter id="AcqHandle"/>
+<parameter id="ObjectModel3D"/>
+</parameters>
 </docu>
 </procedure>
 </hdevelop>
