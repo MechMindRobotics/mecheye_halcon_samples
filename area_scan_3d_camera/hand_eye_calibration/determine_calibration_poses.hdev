@@ -37,6 +37,10 @@
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 10000)</l>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
 <c>* Set the calibration board model.</c>
 <c>* Replace "BDB-5" with the calibration board model in use. </c>
 <c>* Possible values include BDB-5, BDB-6, BDB-7, OCB-005, OCB-010, OCB-015, OCB-020, CGB-020, CGB-035, and CGB-050.</c>

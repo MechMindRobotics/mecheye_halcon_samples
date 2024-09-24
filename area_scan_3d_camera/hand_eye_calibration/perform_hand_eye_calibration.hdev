@@ -27,13 +27,17 @@
 <c>* Obtain the firmware version of the camera.</c>
 <l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
 <c>* Stop execution if the firmware version is lower than 2.1.0.</c>
-<l>if (FirmwareVersion &lt; '2.1.0')</l>
+<l>if (FirmwareVersion &lt; '2.4.0')</l>
 <l>    stop()</l>
 <l>endif</l>
 <c></c>
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 10000)</l>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
 <c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
 <c>* Set the camera mounting mode.</c>
@@ -122,7 +126,7 @@
 <l>timeout := 10</l>
 <l>while (1)</l>
 <l>    wait_seconds(0.5)</l>
-<l>    set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'UpdateCalibStatus', 0)</l>
 <c>    * Check whether the above processes have been completed.</c>
 <l>    get_framegrabber_param (AcqHandle, 'CollectStatus', CollectRet)</l>
 <l>    if (CollectRet == 'CollectDone' or CollectRet == 'COLLECT_DONE')      </l>
@@ -165,7 +169,7 @@
 <l>timeout := 100</l>
 <l>while (1)</l>
 <l>    wait_seconds(0.5)</l>
-<l>    set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
+<l>    set_framegrabber_param (AcqHandle, 'UpdateCalibStatus', 0)</l>
 <c>    * Check whether the calculation has been completed.</c>
 <l>    get_framegrabber_param (AcqHandle, 'CalibStatus', CalibRet)    </l>
 <l>    if (CalibRet == 'CalibDone' or CalibRet == 'CALIB_DONE')     </l>
@@ -179,9 +183,9 @@
 <c>* Check the execution status of the calculation and store the status code in the "CalibResult" variable.</c>
 <l>get_framegrabber_param (AcqHandle, 'ExtrinErrCode', ErrCode)</l>
 <l>CalibResult := ErrCode</l>
+<l>get_framegrabber_param (AcqHandle, 'Extrinsic', ExtriResult)</l>
 <c>* If calculation succeeded, store the extrinsic parameters in a "ExtrinsicParameters" TXT file.</c>
 <l>if (ErrCode == 'Success' or ErrCode == 'SUCCESS')</l>
-<l>    get_framegrabber_param (AcqHandle, 'Extrinsic', ExtriResult)</l>
 <l>    get_system_time (MSecond, Second, Minute, Hour, Day, YDay, Month, Year)</l>
 <l>    path := 'ExtrinsicParameters'+'-'+Hour$'d'+'h'+Minute$'d'+'min'+Second$'d'+'s'+'.txt'</l>
 <l>    open_file (path, 'append', FileHandle)</l>
