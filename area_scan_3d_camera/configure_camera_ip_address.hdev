@@ -11,13 +11,22 @@
 <c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
 <c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
 <l>DeviceInfo := 'MechEye'</l>
-<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>info_framegrabber ('GigEVision2', 'info_boards', Info, DeviceInfos)</l>
 <l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
 <l>dev_inspect_ctrl (MechEyeCameras)</l>
 <c>* Stop execution if no cameras are found.</c>
 <l>if (not |MechEyeCameras|)</l>
 <l>    stop()</l>
 <l>endif</l>
+<c></c>
+<c>* In the following situation, you can uncomment the following command and comment all subsequent lines to modify the camera IP address forcibly. Alternatively, you can use the Image Acquisition Assistant to do so while connecting to the camera.</c>
+<c>* The camera cannot be connected because the camera IP address and the IP address of the computer Ethernet port connected to the camera are not in the same subnet. </c>
+<c>* For the "force_ip" argument, enter the following items, separated by forward slashes:</c>
+<c>* The IP address of the computer Ethernet port connected to the camera</c>
+<c>* The camera's MAC address (Use the "arp -a" command in a terminal to find out the camera's MAC address by its current IP address)</c>
+<c>* The new IP address for the camera</c>
+<c>* The new subnet mask for the camera</c>
+<l>* open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', 'force_ip=192.168.23.1/DC:5D:86:70:2D:8E/192.168.23.2/255.255.255.0', 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
 <c></c>
 <c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
 <l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
