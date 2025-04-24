@@ -53,7 +53,7 @@
 <c>    * Set the "ComponentSelector" parameter to "Intensity" and the "ComponentEnable" parameter to "true" to enable the acquisition of the 2D image data.</c>
 <l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
 <l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', true)   </l>
-<c>    * For the LSR (V4) and DEEP (V4) series, configure the "SourceSelector" parameter to obtain either the "2D image (texture)" or the "2D image (depth source)".</c>
+<c>    * For the LSR (V4) and DEEP series, configure the "SourceSelector" parameter to obtain either the "2D image (texture)" or the "2D image (depth source)".</c>
 <c>    * "Color": obtain the "2D image (texture)" (default value)</c>
 <c>    * "Monochrome": obtain the "2D image (depth source)"</c>
 <l>    * set_framegrabber_param (AcqHandle, 'SourceSelector', 'Monochrome')</l>
@@ -77,7 +77,7 @@
 <c>* Set the "add_objectmodel3d_overlay_attrib" parameter to "enable" to append the overlay information in the output model in form of an extended attribute. </c>
 <l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
 <c>* Generate the point cloud (stored in the "ObjectModel3D" variable).</c>
-<l>grab_data(Image, Region, Contur, AcqHandle, ObjectModel3D)</l>
+<l>grab_data(Image, Region, Contour, AcqHandle, ObjectModel3D)</l>
 <c></c>
 <c>* Stop execution if the number of points is zero. Please adjust parameters (such as "ROI" or "Depth Range") and retry.</c>
 <l>get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>

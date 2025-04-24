@@ -38,6 +38,10 @@
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
 <c>* Obtain the available options of the "ComponentSelector" parameter.</c>
 <l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c>* Set the "EdgeArtifactRemoval" parameter to true to enable EdgeArtifactRemoval</c>
+<l>*if (FirmwareVersion &gt;= '2.5.0')</l>
+<l>*    set_framegrabber_param (AcqHandle, 'EdgeArtifactRemoval', true)</l>
+<l>*endif</l>
 <c></c>
 <c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of only the depth map (2D image containing the Z values).</c>
 <l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>

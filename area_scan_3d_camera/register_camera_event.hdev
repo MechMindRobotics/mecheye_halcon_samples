@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* With this sample, you can register camera events and define event-handling mechanisms to ensure efficient performance.</c>
+<c>* This sample obtains the depth map, which means that the obtained image contains only the depth (Z values), instead of all X, Y, and Z values. </c>
+<c></c>
+<c></c>
+<c>* Discover all available cameras and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the camera that needs to be connected.</c>
+<l>DeviceInfo := 'MechEye'</l>
+<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
+<c>* Stop execution if no cameras are found.</c>
+<l>if (not |MechEyeCameras|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Connect to the camera: if "user_name" or "unique_name" is not set in "DeviceInfo", the first camera in "MechEyeCameras" will be connected. </c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Obtain the firmware version of the camera.</c>
+<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
+<c>* Stop execution if the firmware version is lower than 2.5.0.</c>
+<l>if (FirmwareVersion &lt; '2.5.0')</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<l>EventMessageQueues := []</l>
+<c></c>
+<c>* Get available events</c>
+<l>get_framegrabber_param(AcqHandle, 'EventSelector_values', Event_selector_values)</l>
+<c></c>
+<l>try</l>
+<c>    * Register the exposure end event (i.e., the camera has finished projecting structured light and acquired a round of 3D data). </c>
+<c>    * The event data is FrameID and Timestamp.</c>
+<l>    set_framegrabber_param(AcqHandle, 'event_selector', 'EventExposureEnd')</l>
+<l>    set_framegrabber_param (AcqHandle, 'event_data', ['EventExposureEndFrameID', 'EventExposureEndTimestamp'])</l>
+<c>    * Set "event_notification_helper" to "enable". The camera will automatically send a message when the exposure event occurs.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_notification_helper', 'enable')</l>
+<c>    * Create a message queue named "EventExposureEndMessageQueue" to handle events sent from the camera.</c>
+<l>    create_message_queue (EventExposureEndMessageQueue)</l>
+<c>    * The camera will try to send a message to the message queue "EventExposureEndMessageQueue" every time the exposure end event occurs. </c>
+<c>    * If any error occurs, disconnect from the camera and stop execution.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_message_queue', EventExposureEndMessageQueue)</l>
+<l>    tuple_concat (EventMessageQueues, EventExposureEndMessageQueue, EventMessageQueues)</l>
+<l>catch (Exception)</l>
+<l>    close_framegrabber (AcqHandle)</l>
+<l>    stop ()</l>
+<l>endtry</l>
+<c></c>
+<l>try</l>
+<c>    * Register the voltage abnormal event.</c>
+<c>    * The event data is Timestamp and Voltage.</c>
+<l>    set_framegrabber_param(AcqHandle, 'event_selector', 'EventVoltageAbnormal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'event_data', [ 'EventVoltageAbnormalTimestamp', 'EventVoltageAbnormalVoltage'])</l>
+<c>    * Set "event_notification_helper" to "enable". The camera will automatically send a message when the exposure event occurs.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_notification_helper', 'enable')</l>
+<c>    * Create a message queue named "EventVoltageAbnormalMessageQueue" to handle events sent from the camera.</c>
+<l>    create_message_queue (EventVoltageAbnormalMessageQueue)</l>
+<c>    * The camera will try to send a message to the message queue "EventVoltageAbnormalMessageQueue" every time the voltage abnormal event occurs. </c>
+<l>    set_framegrabber_param (AcqHandle, 'event_message_queue', EventVoltageAbnormalMessageQueue)</l>
+<l>    tuple_concat (EventMessageQueues, EventVoltageAbnormalMessageQueue, EventMessageQueues)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c></c>
+<l>try</l>
+<c>    * Register the laser unit temperature abnormal event.</c>
+<c>    * The event data is LaserUnitTemperature and Timestamp.</c>
+<l>    set_framegrabber_param(AcqHandle, 'event_selector', 'EventLaserUnitTemperatureAbnormal')</l>
+<l>    set_framegrabber_param (AcqHandle, 'event_data', [ 'EventLaserUnitTemperatureAbnormalLaserUnitTemperature', 'EventLaserUnitTemperatureAbnormalTimestamp'])</l>
+<c>    * Set "event_notification_helper" to "enable". The camera will automatically send a message when the exposure event occurs.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_notification_helper', 'enable')</l>
+<c>    * Create a message queue named "EventDataHandle" to handle events sent from the camera.</c>
+<l>    create_message_queue (EventLaserUnitTempAbnrmlMessageQueue)</l>
+<c>    * The camera will try to send a message to the message queue "EventDataHandle" every time the exposure end event occurs. </c>
+<c>    * If any error occurs, disconnect from the camera and stop execution.</c>
+<c>    * Note: If you want to monitor multiple events, it is possible to use the same queue or use multiple queues.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_message_queue', EventLaserUnitTempAbnrmlMessageQueue)</l>
+<l>    tuple_concat (EventMessageQueues, EventLaserUnitTempAbnrmlMessageQueue, EventMessageQueues)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c></c>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
+<c></c>
+<c>* Get the parameter value of "Scan2DExposureMode".</c>
+<l>get_framegrabber_param (AcqHandle, 'Scan2DExposureMode', scan2DExposureMode)</l>
+<c>* For models that have the "Scan2DPatternRoleExposureMode" and "Scan2DFlashAcquisitionMode" parameters, obtain the parameter values. </c>
+<c>* For those without the parameters, skip the if block and jump to the else block.</c>
+<l>scan2DPatternRoleExposureMode := ''</l>
+<l>scan2DFlashAcquisitionMode := ''</l>
+<l>try</l>
+<l>    get_framegrabber_param (AcqHandle, 'Scan2DPatternRoleExposureMode', scan2DPatternRoleExposureMode)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<l>try</l>
+<l>    get_framegrabber_param (AcqHandle, 'Scan2DFlashAcquisitionMode', scan2DFlashAcquisitionMode)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c></c>
+<c>* If the "scan2DExposureMode" or "scan2DPatternRoleExposureMode" is set to "Flash" and the "scan2DFlashAcquisitionMode" is set to "Fast", execute the if block. Otherwise, execute the else block.</c>
+<c>* When the if block is executed, the 2D image is actually part of the 3D data. After acquiring the 3D data, the robot is free to move. During the robot motion, the 2D image can be obtained, thus shortening the acquisition time.</c>
+<c>* When the else block is executed, the camera obtains the 2D image before the 3D data so that the robot remains still before the 2D image acquisition completes.</c>
+<l>if ((scan2DExposureMode == 'Flash' or scan2DPatternRoleExposureMode == 'Flash') and scan2DFlashAcquisitionMode != 'Responsive')</l>
+<c>    * Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
+<c>    * Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>    get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c>    </c>
+<c>    * Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of only the depth map (2D image containing the Z values).</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>    set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
+<c>    </c>
+<c>    * Disable the "Intensity" component to avoid obtaining unneeded data.</c>
+<l>    if(find(componentSelectorValues,'Intensity') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>    endif</l>
+<c>    </c>
+<c>    * Disable the "Normal" component to avoid obtaining unneeded data.</c>
+<l>    if(find(componentSelectorValues,'Normal') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>    endif</l>
+<c>    </c>
+<c>    * Before acquiring the 3D data, start a thread that handles the event messages.</c>
+<l>    par_start&lt;EventThreadID&gt; : event_handler (EventMessageQueues, Message)</l>
+<c>    </c>
+<c>    * Acquire the raw data that generates the depth map from the camera.</c>
+<l>    grab_image(DepthRaw, AcqHandle)</l>
+<c>    </c>
+<c>    * Wait until event handler thread is finished.</c>
+<l>    par_join (EventThreadID)</l>
+<c>    </c>
+<c>    * Convert the raw data to depth map.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateC')</l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', ScaleZ)</l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', OffsetZ)</l>
+<l>    convert_image_type(DepthRaw, DepthReal, 'real')</l>
+<l>    scale_image(DepthReal, DepthInMM, ScaleZ, OffsetZ)</l>
+<c>    * Convert the unit of depth values in the depth map from millimeter to meter.</c>
+<l>    scale_image(DepthInMM, DepthInM, 0.001, 0)</l>
+<c>    </c>
+<c>    * Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c>    </c>
+<c>    * Acquire the raw data that generates the 2D image from the camera.</c>
+<l>    grab_image(TextureRaw, AcqHandle)</l>
+<l>else</l>
+<c>    * Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c>    </c>
+<c>    * Acquire the raw data that generates the 2D image from the camera.</c>
+<l>    grab_image(TextureRaw, AcqHandle)</l>
+<c>    </c>
+<c>    * Set the "DeviceScanType" parameter to "Areascan3D" to obtain the 3D data.</c>
+<l>    set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan3D')</l>
+<c>    * Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>    get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c>    </c>
+<c>    * Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of only the depth map (2D image containing the Z values).</c>
+<l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>    set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
+<c>    </c>
+<c>    * Disable the "Intensity" component to avoid obtaining unneeded data.</c>
+<l>    if(find(componentSelectorValues,'Intensity') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>    endif</l>
+<c>    </c>
+<c>    * Disable the "Normal" component to avoid obtaining unneeded data.</c>
+<l>    if(find(componentSelectorValues,'Normal') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Normal')</l>
+<l>        set_framegrabber_param (AcqHandle, 'ComponentEnable', false)</l>
+<l>    endif</l>
+<c>    </c>
+<c>    * Start a thread that handles the event messages.</c>
+<l>    par_start&lt;EventThreadID&gt; : event_handler (EventMessageQueues, Message)</l>
+<c>    </c>
+<c>    * Acquire the raw data that generates the depth map from the camera.</c>
+<l>    grab_image(DepthRaw, AcqHandle)</l>
+<c>    </c>
+<c>    * Wait until event handler thread is finished.</c>
+<l>    par_join (EventThreadID)</l>
+<c>    </c>
+<c>    * Convert the raw data to depth map.</c>
+<l>    set_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateSelector', 'CoordinateC')</l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', ScaleZ)</l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', OffsetZ)</l>
+<l>    convert_image_type(DepthRaw, DepthReal, 'real')</l>
+<l>    scale_image(DepthReal, DepthInMM, ScaleZ, OffsetZ)</l>
+<c>    * Convert the unit of depth values in the depth map from millimeter to meter.</c>
+<l>    scale_image(DepthInMM, DepthInM, 0.001, 0)</l>
+<l>endif</l>
+<c></c>
+<c>* Visualize the depth map.</c>
+<l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
+<l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
+<l>WindowScale := 0.4</l>
+<l>WindowWidth := Width * WindowScale</l>
+<l>WindowHeight := Height * WindowScale</l>
+<l>dev_open_window (0, 0, WindowWidth, WindowHeight, 'black', WindowHandle3d)</l>
+<l>dev_display (DepthInM)</l>
+<c></c>
+<c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="event_handler">
+<interface>
+<ic>
+<par name="EventMessageQueues" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Message" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>dev_update_off ()</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (50, 50, 1024, 512, 'black', Window)</l>
+<l>dev_clear_window ()</l>
+<c></c>
+<c>* While waiting for the message of the events, display the following content.</c>
+<l>disp_message (Window, 'Acquiring data. Do not move the robot until the camera finishes projecting structured light.', 'window', 10, 20, 'black', 'true')</l>
+<c></c>
+<l>Message := ''</l>
+<l>for i := 0 to |EventMessageQueues| - 1 by 1</l>
+<l>    EventMessageQueue := EventMessageQueues[i]</l>
+<l>    try</l>
+<l>        dequeue_message (EventMessageQueue, 'timeout', 3, MessageHandle)</l>
+<l>    catch (Exception)</l>
+<l>        if (Exception[0] == 2890 or Exception[0] == 9400)</l>
+<l>            Message := Message + '\nFailed to receive the message from message queue ' + (i + 1) + ': ' + Exception[2] + '.\n'</l>
+<l>            continue</l>
+<l>        else</l>
+<l>            throw (Exception)</l>
+<l>        endif</l>
+<l>    endtry</l>
+<c>    </c>
+<c>    * Get the event data from the message and display it.</c>
+<l>    get_message_param (MessageHandle, 'message_keys', [], Keys)</l>
+<l>    for x := 0 to |Keys| - 1 by 1</l>
+<l>        get_message_tuple (MessageHandle, Keys[x], EventData)</l>
+<l>        if (|EventData| &gt; 0)</l>
+<l>            Message := Message + Keys[x] + ': ' + EventData + '\n '</l>
+<l>        else</l>
+<l>            Message := Message + Keys[x] + ': \n '</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>    clear_message (MessageHandle)</l>
+<l>endfor</l>
+<l>dev_clear_window ()</l>
+<l>disp_message (Window, Message, 'window', 10, 20, 'black', 'true')</l>
+<c></c>
+<l>flush_buffer (Window)</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="event_handler">
+<parameters>
+<parameter id="EventMessageQueues"/>
+<parameter id="Message"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>

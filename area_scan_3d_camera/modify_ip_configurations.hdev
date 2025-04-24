@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* With this sample, you can check and set the IP address, subnetmask, and gateway of the device. </c>
+<c>* Changes of the IP configurations take effect after the device is restarted.</c>
+<c>* </c>
+<c></c>
+<c>* Discover all available devices and store them in the "MechEyeCameras" variable.</c>
+<c>* You can replace "MechEye" with the "user_name" or "unique_name" of the device that needs to be connected.</c>
+<l>DeviceInfo := 'MechEye'</l>
+<l>info_framegrabber ('GigEVision2', 'info_boards', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeCameras)</l>
+<l>dev_inspect_ctrl (MechEyeCameras)</l>
+<c>* Stop execution if no cameras are found.</c>
+<l>if (not |MechEyeCameras|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* In the following situation, you can uncomment the following command and comment all subsequent lines to modify the device's IP address forcibly. Alternatively, you can use the Image Acquisition Assistant to do so while connecting to the device.</c>
+<c>* The device cannot be connected because the device' IP address and the IP address of the computer Ethernet port connected to the device are not in the same subnet. </c>
+<c>* For the "force_ip" argument, enter the following items, separated by forward slashes:</c>
+<c>* The IP address of the computer Ethernet port connected to the device</c>
+<c>* The device's MAC address (Use the "arp -a" command in a terminal to find out the device's MAC address by its current IP address)</c>
+<c>* The new IP address for the device</c>
+<c>* The new subnet mask for the device</c>
+<l>* open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', 'force_ip=192.168.23.1/DC:5D:86:70:2D:8E/192.168.23.2/255.255.255.0', 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Connect to the device: if "user_name" or "unique_name" is not set in "DeviceInfo", the first device in "MechEyeCameras" will be connected. </c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeCameras[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Obtain the available parameter names.</c>
+<l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
+<c>* Obtain the device's current IP address, subnet mask, and default gateway.</c>
+<l>try </l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentIPAddress', CurrentIPAddress)</l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentSubnetMask', CurrentSubnetMask)</l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentDefaultGateway', CurrentDefaultGateway)</l>
+<l>catch (Exception)</l>
+<c>    * Stop execution if the above nodes are not available.</c>
+<l>    stop()</l>
+<l>endtry</l>
+<c></c>
+<c>* Transform the obtained IP address, subnet mask, and default gateway into the readable string format.</c>
+<l>CurrentIPAddressString := (rsh(CurrentIPAddress, 24) band 0xff) + '.' + (rsh(CurrentIPAddress, 16) band 0xff) + '.' + (rsh(CurrentIPAddress, 8) band 0xff) + '.' + (rsh(CurrentIPAddress, 0) band 0xff)</l>
+<l>CurrentSubnetMaskString := (rsh(CurrentSubnetMask, 24) band 0xff) + '.' + (rsh(CurrentSubnetMask, 16) band 0xff) + '.' + (rsh(CurrentSubnetMask, 8) band 0xff) + '.' + (rsh(CurrentSubnetMask, 0) band 0xff)</l>
+<l>CurrentDefaultGatewayString := (rsh(CurrentDefaultGateway, 24) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 16) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 8) band 0xff) + '.' + (rsh(CurrentDefaultGateway, 0) band 0xff)</l>
+<c></c>
+<c>* To set a static IP address: Enter the new IP address, subnet mask, and default gateway in the string format.</c>
+<c>* To set a dynamic IP address: Skip to the "try" function.</c>
+<l>IPAddressString := '192.168.20.121'</l>
+<l>SubnetMaskString := '255.255.255.0'</l>
+<l>DefaultGatewayString := '192.168.20.1'</l>
+<c></c>
+<c>* Transform the strings to integers (hexadecimal).</c>
+<l>tuple_split(IPAddressString, '.', IPAddressParts)</l>
+<l>IPAddress := number(IPAddressParts[0]) * lsh(1,24) + number(IPAddressParts[1]) * lsh(1,16) + number(IPAddressParts[2]) * lsh(1,8) + number(IPAddressParts[3]) </l>
+<l>tuple_split(SubnetMaskString, '.', SubnetMaskParts)</l>
+<l>SubnetMask := number(SubnetMaskParts[0]) * lsh(1,24) + number(SubnetMaskParts[1]) * lsh(1,16) + number(SubnetMaskParts[2]) * lsh(1,8) + number(SubnetMaskParts[3]) </l>
+<l>tuple_split(DefaultGatewayString, '.', DefaultGatewayParts)</l>
+<l>DefaultGateway := number(DefaultGatewayParts[0]) * lsh(1,24) + number(DefaultGatewayParts[1]) * lsh(1,16) + number(DefaultGatewayParts[2]) * lsh(1,8) + number(DefaultGatewayParts[3]) </l>
+<c></c>
+<c>* Set the new settings into the device.</c>
+<l>try </l>
+<c>    * For static IP address: Keep this line as is to enable the persistent IP configuration.</c>
+<c>    * For dynamic IP address: Change "true" to "false" to disable the persistent IP configuration (and thus enabling IP address assignment via DHCP).</c>
+<l>    set_framegrabber_param (AcqHandle, 'GevCurrentIPConfigurationPersistentIP', true)</l>
+<c></c>
+<c>    * For static IP address: Set the new IP address, subnet mask and default gateway into the device.</c>
+<l>    set_framegrabber_param (AcqHandle, 'GevPersistentIPAddress', IPAddress)</l>
+<l>    set_framegrabber_param (AcqHandle, 'GevPersistentSubnetMask', SubnetMask)</l>
+<l>    set_framegrabber_param (AcqHandle, 'GevPersistentDefaultGateway', DefaultGateway)</l>
+<l>catch (Exception)</l>
+<c>    * Stop execution if the above nodes are not available.</c>
+<l>    stop()</l>
+<l>endtry</l>
+<c></c>
+<c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

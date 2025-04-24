@@ -70,7 +70,7 @@
 <l>endif</l>
 <c></c>
 <c>* Obtain the image from the camera and store it in the "Image" variable.</c>
-<l>grab_data(Image, Region, Contur, AcqHandle, data)</l>
+<l>grab_data(Image, Region, Contour, AcqHandle, data)</l>
 <c>* Count the number of channels in the acquired image. </c>
 <l>count_obj(Image, ImageChannelCount)</l>
 <c>* Stop execution if the number of channels is smaller than 6.</c>

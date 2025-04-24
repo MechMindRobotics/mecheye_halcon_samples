@@ -157,7 +157,7 @@ set_framegrabber_param (AcqHandle, 'CalibrationType', 'EyeInHand')
 
 The sample contains an operator that can switch the reference frame in which the point cloud is output from the camera.
 
-The default setting is not to switch the reference frame. If you would like to switch to the robot reference frame, please locate the following operator in the **captureTranformedPointCloud** procedure, and replace `false` with `true`.
+The default setting is not to switch the reference frame. If you would like to switch to the robot reference frame, please locate the following operator in the **captureTransformedPointCloud** procedure, and replace `false` with `true`.
 
 ```halcon
 set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformEnable',false)
