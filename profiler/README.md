@@ -48,3 +48,5 @@ This section describes the method for connecting to a specific laser profiler. T
   Trigger multiple rounds of data acquisition with the signals input from software, trigger line scans at a fixed rate, and then retrieve the acquired data.
 * [trigger_with_external_device_and_fixed_rate_continuous](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/trigger_with_external_device_and_fixed_rate_continuous.hdev):  
   Trigger multiple rounds of data acquisition with signals input from the external device, trigger line scans at a fixed rate, and then retrieve the acquired data.
+* [register_profiler_event](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/profiler/register_profiler_event.hdev):  
+  Register profiler events and define event-handling mechanisms.
