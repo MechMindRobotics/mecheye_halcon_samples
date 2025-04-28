@@ -41,7 +41,7 @@
 <c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
 <c>* Set the camera mounting mode.</c>
-<c>* Replace "EyeInHnad" with "EyeToHand" if the camera is mounted in the eye-to-hand mode.</c>
+<c>* Replace "EyeInHand" with "EyeToHand" if the camera is mounted in the eye-to-hand mode.</c>
 <l>set_framegrabber_param (AcqHandle, 'CalibrationType', 'EyeInHand')</l>
 <c>* Set the calibration board model.</c>
 <c>* Replace "BDB-5" with the calibration board model in use.</c>
@@ -98,7 +98,7 @@
 <c>* By default, the reference frame is not switched. </c>
 <c>* If you need to output the point cloud in the robot reference frame, please open the following procedure and change the value of the "Scan3dCoordinateTransformEnable" parameter. </c>
 <c>* The point cloud will be saved to the "PointCloud" PLY file.</c>
-<l>captureTranformedPointCloud(AcqHandle,ExtriResult)</l>
+<l>captureTransformedPointCloud(AcqHandle,ExtriResult)</l>
 <c></c>
 <c>* Close the frame grabber.</c>
 <l>close_framegrabber (AcqHandle)</l>
@@ -384,7 +384,7 @@
 </parameters>
 </docu>
 </procedure>
-<procedure name="captureTranformedPointCloud">
+<procedure name="captureTransformedPointCloud">
 <interface>
 <ic>
 <par name="AcqHandle" base_type="ctrl" dimension="0"/>
@@ -394,7 +394,7 @@
 <body>
 <c>*Set this parameter to "true" to output point clouds in the robot reference frame.</c>
 <l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformEnable',false)</l>
-<c>*Transfrom the quaternions in the extrinsic parameters to Euler angles (X-Y-Z).</c>
+<c>*Transform the quaternions in the extrinsic parameters to Euler angles (X-Y-Z).</c>
 <l>extrinsicTotransval(ExtriResult,TransformVal)</l>
 <c>*Set the reference frame transform values to the calculated extrinsic parameters.</c>
 <l>set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformSelector', 'RotationX')</l>
@@ -431,7 +431,7 @@
 <l>clear_object_model_3d (ObjectModel3D)</l>
 <l>return ()</l>
 </body>
-<docu id="captureTranformedPointCloud">
+<docu id="captureTransformedPointCloud">
 <parameters>
 <parameter id="AcqHandle"/>
 <parameter id="ExtriResult"/>

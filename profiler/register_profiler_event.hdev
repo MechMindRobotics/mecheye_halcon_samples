@@ -4,7 +4,8 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* With this sample, you can perform one round of data acquisition and obtain the profile data (including intensity and depth data).</c>
+<c>* With this sample, you can register profiler events and define event-handling mechanisms.</c>
+<c>* This sample performs one round of data acquisition and obtains the profile data (including intensity and depth data).</c>
 <c>* In this sample, the data acquisition is triggered by the software, and the scanning of each line is triggered with an encoder.</c>
 <c>*</c>
 <c></c>
@@ -25,10 +26,58 @@
 <c>* Obtain the available parameter names and firmware version of the laser profiler.</c>
 <l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
 <l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
-<c>* Stop execution if the firmware version is lower than 2.2.0.</c>
-<l>if (FirmwareVersion &lt; '2.2.0')</l>
+<c>* Stop execution if the firmware version is lower than 2.5.0.</c>
+<l>if (FirmwareVersion &lt; '2.5.0')</l>
 <l>    stop()</l>
 <l>endif</l>
+<c></c>
+<l>EventMessageQueues := []</l>
+<c></c>
+<c>* Get available events</c>
+<l>get_framegrabber_param(AcqHandle, 'EventSelector_values', Event_selector_values)</l>
+<c></c>
+<c>* Note: When adding new events to monitor in the current sample program,</c>
+<c>* please append events that may not trigger to the end of the event list</c>
+<c>* to prevent timeouts from blocking the reception of other events.</c>
+<c></c>
+<l>try</l>
+<c>    * Register the frame start event.</c>
+<c>    * The event data includes the ID of the frame started, and the time stamp of the event.</c>
+<l>    set_framegrabber_param(AcqHandle, 'event_selector', 'EventFrameStart')</l>
+<l>    set_framegrabber_param (AcqHandle, 'event_data', ['EventFrameStartFrameID', 'EventFrameStartTimestamp'])</l>
+<c>    * Set "event_notification_helper" to "enable". The laser profiler will automatically send a message when the frame start event occurs.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_notification_helper', 'enable')</l>
+<c>    * Create a message queue named "EventFrameStartMessageQueue" to handle the events sent from the laser profiler.</c>
+<l>    create_message_queue (EventFrameStartMessageQueue)</l>
+<c>    * The laser profiler will try to send a message to the message queue "EventFrameStartMessageQueue" every time the frame start event occurs.</c>
+<c>    * If any error occurs, disconnect from the laser profiler and stop execution.</c>
+<c>    * Note: If you want to monitor multiple events, it is possible to use the same queue or use multiple queues.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_message_queue', EventFrameStartMessageQueue)</l>
+<l>    tuple_concat(EventMessageQueues, EventFrameStartMessageQueue, EventMessageQueues)</l>
+<l>catch (Exception)</l>
+<l>    close_framegrabber (AcqHandle)</l>
+<l>    stop ()</l>
+<l>endtry</l>
+<c></c>
+<l>try</l>
+<c>    * Register the line trigger missed event (i.e., the laser profiler failed to acquire a profile after receiving the line scan trigger signal due to the excessive trigger rate).</c>
+<c>    * The event data includes the lost profile ID, the ID of the frame containing the lost profile, and the time stamp of the event.</c>
+<l>    set_framegrabber_param(AcqHandle, 'event_selector', 'EventLineTriggerMissed')</l>
+<l>    set_framegrabber_param (AcqHandle, 'event_data', ['EventLineTriggerMissedFrameID', 'EventLineTriggerMissedTimestamp', 'EventLineTriggerMissedLineID'])</l>
+<c>    * Set "event_notification_helper" to "enable". The laser profiler will automatically send a message when the line trigger missed event occurs.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_notification_helper', 'enable')</l>
+<c>    * Create a message queue named "EventLineTriggerMissedMessageQueue" to handle the events sent from the laser profiler.</c>
+<l>    create_message_queue (EventLineTriggerMissedMessageQueue)</l>
+<c>    * The laser profiler will try to send a message to the message queue "EventLineTriggerMissedMessageQueue" every time the line trigger missed event occurs.</c>
+<c>    * If any error occurs, disconnect from the laser profiler and stop execution.</c>
+<c>    * Note: If you want to monitor multiple events, it is possible to use the same queue or use multiple queues.</c>
+<l>    set_framegrabber_param (AcqHandle, 'event_message_queue', EventLineTriggerMissedMessageQueue)</l>
+<l>    tuple_concat(EventMessageQueues, EventLineTriggerMissedMessageQueue, EventMessageQueues)</l>
+<l>catch (Exception)</l>
+<l>    close_framegrabber (AcqHandle)</l>
+<l>    stop ()</l>
+<l>endtry</l>
+<c></c>
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
@@ -44,7 +93,6 @@
 <c>* A packet gap occurs when one or more packets are missing during the data transmission. </c>
 <c>* Setting this parameter to 500 allows a maximum of 500 packet gaps in the stream.</c>
 <l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
-<c></c>
 <c>* Set the "ExposureMode" parameter to "Timed" and the "ExposureTime" parameter to 80 μs.</c>
 <l>set_framegrabber_param (AcqHandle, 'ExposureMode', 'Timed')</l>
 <l>set_framegrabber_param (AcqHandle, 'ExposureTime', 80)</l>
@@ -92,15 +140,16 @@
 <c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of the depth data.</c>
 <l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
 <l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
-<c>* Enable outlier removal by setting the `EnableOutlierRemoval` parameter to `true`.</c>
-<c>* Adjust the outlier removal intensity by setting the `OutlierRemovalIntensity` parameter to `VeryLow`.</c>
-<l>*if (FirmwareVersion &gt;= '2.5.0')</l>
-<l>*    set_framegrabber_param (AcqHandle, 'EnableOutlierRemoval', true)</l>
-<l>*    set_framegrabber_param (AcqHandle, 'OutlierRemovalIntensity', 'VeryLow')</l>
-<l>*endif</l>
 <c></c>
-<c>* Acquire the 3D data from the laser profiler.</c>
+<c>* Before acquiring the 3D data, start a thread that handles the event messages.</c>
+<l>par_start&lt;EventThreadID&gt; : event_handler (EventMessageQueues, MessageList)</l>
+<c></c>
+<c>* While the event_handler is running, acquire the 3D data from the laser profiler.</c>
 <l>grab_data(Image, Region, Contours, AcqHandle, ObjectModel3D)</l>
+<c></c>
+<c>* Wait until event_handler thread is finished to continue the execution.</c>
+<l>par_join (EventThreadID)</l>
+<c></c>
 <c>* Select the "Reflectance" component (intensity data) from the acquired data and store it to the variable "reflectance". </c>
 <l>select_obj (Image, reflectance, 1)</l>
 <c>* Get the width and height of the intensity image and store the values in the variables "reflectanceWidth" and "reflectanceHeight".</c>
@@ -144,6 +193,99 @@
 </body>
 <docu id="main">
 <parameters/>
+</docu>
+</procedure>
+<procedure name="event_handler">
+<interface>
+<ic>
+<par name="EventMessageQueues" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="MessageList" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>dev_update_off ()</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (50, 50, 1024, 512, 'black', Window)</l>
+<l>dev_clear_window ()</l>
+<c>* While waiting for the message of the line trigger missed event and frame start event, display the following content.</c>
+<l>disp_message (Window, 'Acquiring data.', 'window', 10, 20, 'black', 'true')</l>
+<c></c>
+<c>* Set "event_reception_duration" to 60 seconds. Please increase the value if the actual data acquisition takes more than 60 seconds.</c>
+<l>event_reception_duration := 60.0</l>
+<c></c>
+<c>* Record the current time as the start time to track the elapsed time.</c>
+<l>count_seconds(start_time)</l>
+<c></c>
+<c>* Initialize the elapsed time variable to zero.</c>
+<l>elapsed_time := 0.0</l>
+<c></c>
+<c>* Create an empty list to store messages retrieved from the message queue.</c>
+<l>MessageList := []</l>
+<c>* Create an empty string to store messages retrieved from the message queue.</c>
+<l>Message := ''</l>
+<c></c>
+<c></c>
+<c></c>
+<l>for i := 0 to |EventMessageQueues| - 1 by 1</l>
+<c>    * Run the while loop as long as the elapsed time is less than the value of "event_reception_duration".</c>
+<c>    * The loop continuously checks for new event messages and handles them until the timeout is reached or an error occurs.</c>
+<l>    while (elapsed_time &lt; event_reception_duration)</l>
+<l>        EventMessageQueue := EventMessageQueues[i]</l>
+<c>        * Create an empty string "Text" to store the event data.  </c>
+<l>        Text := '\n '</l>
+<c>        </c>
+<c>        * Try to retrieve a message from the queue. If no message is received within 5 seconds, it times out. </c>
+<c>        * If an exception (such as timeout) occurs, the while loop stops regardless of whether the event reception duration is reached or not.</c>
+<l>        try</l>
+<l>            dequeue_message (EventMessageQueue, 'timeout', 5, MessageHandle)</l>
+<l>        catch (Exception)</l>
+<l>            if (Exception[0] == 2890 or Exception[0] == 9400)</l>
+<l>                Text := Text + 'Failed to receive the message from message queue ' + (i + 1) + ': ' + Exception[2] + '.\n'</l>
+<l>                Message := Message + Text</l>
+<l>                tuple_concat(MessageList, Text, MessageList)</l>
+<l>                break</l>
+<l>            else</l>
+<l>                throw (Exception)</l>
+<l>            endif</l>
+<l>        endtry</l>
+<c>        </c>
+<c>        * Retrieve all key names and their corresponding values from the message and store them in "Text". For keys without any data, store the key names in "Text".</c>
+<l>        get_message_param (MessageHandle, 'message_keys', [], Keys)</l>
+<l>        for x := 0 to |Keys| - 1 by 1</l>
+<l>            get_message_tuple (MessageHandle, Keys[x], EventData)</l>
+<l>            if (|EventData| &gt; 0)</l>
+<l>                Text := Text + Keys[x] + ': ' + EventData + '\n '</l>
+<l>            else</l>
+<l>                Text := Text + Keys[x] + ': \n '</l>
+<l>            endif</l>
+<l>        endfor</l>
+<l>        clear_message (MessageHandle)</l>
+<l>        Message := Message + Text</l>
+<l>        tuple_concat (MessageList, Text, MessageList)</l>
+<l>        clear_message (MessageHandle)</l>
+<l>        if (i == 0)</l>
+<l>            break</l>
+<l>        endif</l>
+<l>        count_seconds(current_time)</l>
+<l>        elapsed_time := current_time - start_time</l>
+<l>    endwhile</l>
+<l>endfor</l>
+<c></c>
+<l>dev_clear_window ()</l>
+<c>* Display the event data, including the key names and values.</c>
+<l>disp_message (Window, Message, 'window', 10, 20, 'black', 'true')</l>
+<c></c>
+<l>flush_buffer (Window)</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="event_handler">
+<parameters>
+<parameter id="EventMessageQueues"/>
+<parameter id="MessageList"/>
+</parameters>
 </docu>
 </procedure>
 </hdevelop>

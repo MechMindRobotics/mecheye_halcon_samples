@@ -4,7 +4,7 @@
 <interface/>
 <body>
 <c>*</c>
-<c>* With this sample, you can perform rounds of data acquisition continously and obtain the profile data (including intensity and depth data).</c>
+<c>* With this sample, you can perform rounds of data acquisition continuously and obtain the profile data (including intensity and depth data).</c>
 <c>* In this sample, each round of data acquisition is triggered by the software, and the scanning of each line is triggered at a fixed rate.</c>
 <c>*</c>
 <c></c>
@@ -32,6 +32,10 @@
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000) </l>
+<c>* Set the "[Device]LinkCommandTimeout" parameter.</c>
+<c>* The "[Device]LinkCommandTimeout" parameter defines the maximum time in microseconds that the frame grabber will wait for the reply of a control message before timing out.</c>
+<c>* When increasing the number of lines to be scanned, please increase the "[Device]LinkCommandTimeout" parameter accordingly.</c>
+<l>set_framegrabber_param (AcqHandle, '[Device]LinkCommandTimeout', 400000)</l>
 <c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
 <c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
 <l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
@@ -91,6 +95,12 @@
 <l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>
 <c>* Set the "AcquisitionLineRate" parameter to 2000 Hz.</c>
 <l>set_framegrabber_param (AcqHandle, 'AcquisitionLineRate', 2000)</l>
+<c>* Enable outlier removal by setting the `EnableOutlierRemoval` parameter to `true`.</c>
+<c>* Adjust the outlier removal intensity by setting the `OutlierRemovalIntensity` parameter to `VeryLow`.</c>
+<l>*if (FirmwareVersion &gt;= '2.5.0')</l>
+<l>*    set_framegrabber_param (AcqHandle, 'EnableOutlierRemoval', true)</l>
+<l>*    set_framegrabber_param (AcqHandle, 'OutlierRemovalIntensity', 'VeryLow')</l>
+<l>*endif</l>
 <c></c>
 <c>* Start the continuous data acquisition process.</c>
 <c>* Attention: "grab_image_start()" must be called before "grab_data_async()" to start the data acquisition. </c>
@@ -129,7 +139,7 @@
 <c>    * Transform the Z values using the scaling factor and offset.</c>
 <l>    convert_image_type(depthRaw, depthReal, 'real')</l>
 <c>    * Filter out the points with invalid depth values.</c>
-<l>    threshold(depthReal, validRegion, 1e-30, 'max')</l>
+<l>    threshold(depthReal, validRegion, 1e-30, 65535)</l>
 <l>    reduce_domain(depthReal, validRegion, depthValid) </l>
 <c>    * Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
 <l>    scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>

@@ -34,6 +34,10 @@
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
 <l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
+<c>* Set the "[Device]LinkCommandTimeout" parameter.</c>
+<c>* The "[Device]LinkCommandTimeout" parameter defines the maximum time in microseconds that the frame grabber will wait for the reply of a control message before timing out.</c>
+<c>* When increasing the number of lines to be scanned, please increase the "[Device]LinkCommandTimeout" parameter accordingly.</c>
+<l>set_framegrabber_param (AcqHandle, '[Device]LinkCommandTimeout', 400000)</l>
 <c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
 <c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
 <l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
@@ -89,6 +93,12 @@
 <c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of the depth data.</c>
 <l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
 <l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
+<c>* Enable outlier removal by setting the `EnableOutlierRemoval` parameter to `true`.</c>
+<c>* Adjust the outlier removal intensity by setting the `OutlierRemovalIntensity` parameter to `VeryLow`.</c>
+<l>*if (FirmwareVersion &gt;= '2.5.0')</l>
+<l>*    set_framegrabber_param (AcqHandle, 'EnableOutlierRemoval', true)</l>
+<l>*    set_framegrabber_param (AcqHandle, 'OutlierRemovalIntensity', 'VeryLow')</l>
+<l>*endif</l>
 <c></c>
 <c>* Make sure that the external device sends a data acquisition trigger signal to the laser profiler after "grab_data()" is called.</c>
 <c></c>
@@ -111,7 +121,7 @@
 <c>* Transform the Z values using the scaling factor and offset.</c>
 <l>convert_image_type(depthRaw, depthReal, 'real')</l>
 <c>* Filter out the points with invalid depth values.</c>
-<l>threshold(depthReal, validRegion, 1e-30, 'max')</l>
+<l>threshold(depthReal, validRegion, 1e-30, 65535)</l>
 <l>reduce_domain(depthReal, validRegion, depthValid) </l>
 <c>* Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
 <l>scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
@@ -126,7 +136,7 @@
 <c>    </c>
 <c>    * Visualize the point cloud.</c>
 <c>    * Note: If the value of the "Height" parameter is greater than 32768, the visualization window cannot open, and the error with code 5122 will be raised.</c>
-<c>    * In that case, please deactivate lines 130 to 132.</c>
+<c>    * In that case, please deactivate the next three lines.</c>
 <l>    dev_open_window (0, 0, Width, Height, 'black', WindowHandle3d)</l>
 <l>    visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], [], [], [], [], [], PoseOut)</l>
 <l>    dev_close_window ()</l>

@@ -2,7 +2,7 @@
 
 This documentation provides descriptions of the HALCON samples for Mech-Eye Industrial 3D Camera.
 
-For more detailed information on controlling Mech-Eye Industrial 3D Camera with HALCON, please refer to the [user manual](https://docs.mech-mind.net/en/eye-3d-camera/latest/genicam/genicam.html).
+For more detailed information on controlling Mech-Eye Industrial 3D Camera with HALCON, please refer to the [user manual](https://docs.mech-mind.net/en/eye-3d-camera/latest/genicam/halcon.html).
 
 ## Prerequisites for Controlling Camera with HALCON
 
@@ -49,5 +49,7 @@ This section describes the method for connecting to a specific camera. This meth
   Obtain 3D data and the 2D image used for texturing the point cloud, and then construct the textured point cloud.
 * [obtain_point_cloud_with_normals](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/obtain_point_cloud_with_normals.hdev):  
   Obtain the point cloud with normals.
-* [hand_eye_calibration](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/hand_eye_calibration):
+* [hand_eye_calibration](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/hand_eye_calibration.hdev):  
   Two samples used to perform hand-eye calibration.
+* [register_camera_event](https://github.com/MechMindRobotics/mecheye_halcon_samples/tree/master/area_scan_3d_camera/register_camera_event.hdev):  
+  Register camera events and define event-handling mechanisms to ensure efficient performance.
