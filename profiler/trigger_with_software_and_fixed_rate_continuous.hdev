@@ -88,8 +88,7 @@
 <c>* For Mech-Eye LNX-8080A: Comment out the following line.</c>
 <l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'Software')</l>
 <c>* The "TriggerMode" parameter controls if the selected trigger is active. </c>
-<c>* Alert: When the "AcquisitionMode" parameter is set to "Continuous", the "TriggerMode" parameter cannot be set to "Off" and will be automatically changed to "On".</c>
-<l>*set_framegrabber_param (AcqHandle, 'TriggerMode', 'On') </l>
+<l>set_framegrabber_param (AcqHandle, 'TriggerMode', 'On') </l>
 <c>* Set the "LineScanTriggerSource" parameter to "FixedRate", so that the scan of each line is triggered at a fixed rate.</c>
 <c>* The fixed rate is set through the "AcquisitionLineRate" parameter.</c>
 <l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>

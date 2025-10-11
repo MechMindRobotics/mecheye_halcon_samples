@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="20.11.1.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>*</c>
+<c>* With this sample, you can perform nonstop data acquisition and obtain data including the intensity image and depth map.</c>
+<c>* In this sample, after data acquisition is triggered by the software, the laser profiler scans the target object continuously at a fixed rate and returns fixed-length data.</c>
+<c>*</c>
+<c></c>
+<c>* Discover all available laser profilers and store them in the "MechEyeProfilerInfos" variable.</c>
+<c>* You can replace "LNX" with the "user_name" or "unique_name" of the laser profiler to be connected.</c>
+<l>DeviceInfo := 'LNX'</l>
+<l>info_framegrabber ('GigEVision2', 'device', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeProfilerInfos)</l>
+<l>dev_inspect_ctrl (MechEyeProfilerInfos)</l>
+<c>* Stop execution if no laser profilers are found.</c>
+<l>if (not |MechEyeProfilerInfos|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Connect to the laser profiler: if "user_name" or "unique_name" is not set in "DeviceInfo", the first laser profiler in "MechEyeProfilersInfos" will be connected. </c>
+<l>open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
+<c></c>
+<c>* Obtain the available parameter names and firmware version of the laser profiler.</c>
+<l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
+<l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
+<c>* Stop execution if the firmware version is lower than 2.2.0.</c>
+<l>if (FirmwareVersion &lt; '2.2.0')</l>
+<l>    stop()</l>
+<l>endif</l>
+<c>* Set the "grab_timeout" parameter.</c>
+<c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
+<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000) </l>
+<c>* Set the "[Device]LinkCommandTimeout" parameter.</c>
+<c>* The "[Device]LinkCommandTimeout" parameter defines the maximum time in microseconds that the frame grabber will wait for the reply of a control message before timing out.</c>
+<c>* When increasing the number of lines to be scanned, please increase the "[Device]LinkCommandTimeout" parameter accordingly.</c>
+<l>set_framegrabber_param (AcqHandle, '[Device]LinkCommandTimeout', 400000)</l>
+<c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
+<c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
+<l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxBlockDuration', 0.7*(grabTimeout*1000))</l>
+<c>* Set the maximum number of packet gaps allowed in the GigE Vision stream. </c>
+<c>* A packet gap occurs when one or more packets are missing during the data transmission. </c>
+<c>* Setting this parameter to 500 allows a maximum of 500 packet gaps in the stream.</c>
+<l>set_framegrabber_param (AcqHandle, '[Stream]GevStreamMaxPacketGaps', 500)</l>
+<c></c>
+<c>* Set the "ExposureMode" parameter to "Timed" and the "ExposureTime" parameter to 80 μs.</c>
+<l>set_framegrabber_param (AcqHandle, 'ExposureMode', 'Timed')</l>
+<l>set_framegrabber_param (AcqHandle, 'ExposureTime', 80)</l>
+<c></c>
+<c>* Set the "DeviceScanType" parameter to "Linescan3D" to obtain the profile data.</c>
+<c>* If the laser profiler has not fully completed the data acquisition, the "DeviceScanType" parameter may be locked.</c>
+<c>* Therefore, a for loop with wait is used to make 5 attempts at setting the parameter value.</c>
+<l>for Count :=1 to 5 by 1 </l>
+<l>    wait_seconds(2)</l>
+<l>    try</l>
+<l>        set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Linescan3D')</l>
+<l>        break</l>
+<l>    catch (Exception)</l>
+<l>        continue</l>
+<l>    endtry </l>
+<l>endfor</l>
+<c>* Stop execution if all 5 attempts failed.</c>
+<l>if (Count == 5)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c>* Set the "create_objectmodel3d" parameter to "enable" to create a 3D object model from the acquired profile data.</c>
+<l>set_framegrabber_param (AcqHandle, 'create_objectmodel3d', 'enable')</l>
+<c>* Set the "add_objectmodel3d_overlay_attrib" parameter to "enable" to add an overlay to the 3D object model using the intensity data.</c>
+<l>set_framegrabber_param (AcqHandle, 'add_objectmodel3d_overlay_attrib', 'enable')</l>
+<c>* Obtain the available options of the "ComponentSelector" parameter.</c>
+<l>get_framegrabber_param (AcqHandle, 'ComponentSelector_values', componentSelectorValues)</l>
+<c>* Set the "Height" of image to 1600, which is equal to the number of lines to be scanned.</c>
+<l>set_framegrabber_param (AcqHandle, 'Height', 1600 )</l>
+<c>* Get the "Width" and "Height" of image.</c>
+<l>get_framegrabber_param (AcqHandle, 'Width', Width)</l>
+<l>get_framegrabber_param (AcqHandle, 'Height', Height)</l>
+<c>* Set the "ComponentSelector" parameter to "Reflectance" and the "PixelFormat" parameter to "Mono8" to enable the acquisition of the intensity data. </c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Reflectance')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Mono8')</l>
+<c>* Set the "ComponentSelector" parameter to "Range" and the "PixelFormat" parameter to "Coord3D_C16" to enable the acquisition of the depth data.</c>
+<l>set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Range')</l>
+<l>set_framegrabber_param (AcqHandle, 'PixelFormat', 'Coord3D_C16')</l>
+<c>* Set the "AcquisitionMode" parameter to "Continuous", so that the laser profiler continuously performs rounds of data acquisition, and the sample the intensity and depth data from each round.</c>
+<l>set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'Continuous')</l>
+<c>* Set the "DataAcquisitionTriggerSource" parameter to "Software" and the "TriggerMode" parameter to "Off" to enable nonstop data acquisition.</c>
+<c>* Nonstop acquisition in external trigger mode is currently not supported.</c>
+<l>set_framegrabber_param (AcqHandle, 'DataAcquisitionTriggerSource', 'Software')</l>
+<l>set_framegrabber_param (AcqHandle, 'TriggerMode', 'Off') </l>
+<c>* Set the "LineScanTriggerSource" parameter to "FixedRate", so that the scan of each line is triggered at a fixed rate.</c>
+<c>* The fixed rate is set through the "AcquisitionLineRate" parameter.</c>
+<l>set_framegrabber_param (AcqHandle, 'LineScanTriggerSource', 'FixedRate')</l>
+<c>* Set the "AcquisitionLineRate" parameter to 2000 Hz.</c>
+<l>set_framegrabber_param (AcqHandle, 'AcquisitionLineRate', 2000)</l>
+<c>* Enable outlier removal by setting the `EnableOutlierRemoval` parameter to `true`.</c>
+<c>* Adjust the outlier removal intensity by setting the `OutlierRemovalIntensity` parameter to `VeryLow`.</c>
+<l>*if (FirmwareVersion &gt;= '2.5.0')</l>
+<l>*    set_framegrabber_param (AcqHandle, 'EnableOutlierRemoval', true)</l>
+<l>*    set_framegrabber_param (AcqHandle, 'OutlierRemovalIntensity', 'VeryLow')</l>
+<l>*endif</l>
+<c></c>
+<c>* Start the continuous data acquisition process.</c>
+<c>* Attention: "grab_image_start()" must be called before "grab_data_async()" to start the data acquisition. </c>
+<c>* Attention: HALCON discourages the use of "set_framegrabber_param (AcqHandle, 'AcquisitionStart', 1)", as this parameter is handled internally by HALCON.</c>
+<l>grab_image_start(AcqHandle, -1) </l>
+<l>while(1)</l>
+<c></c>
+<c>    * Asynchronously obtain the data from the laser profiler and store it to the provided variables.</c>
+<l>    grab_data_async(Image, Region, Contours, AcqHandle, -1, ObjectModel3D)    </l>
+<c>    * Select the "Reflectance" component (intensity data) from the acquired data and store it to the variable "reflectance". </c>
+<l>    select_obj (Image, reflectance, 1)</l>
+<c>    * Get the width and height of the intensity image and store the values in the variables "reflectanceWidth" and "reflectanceHeight".</c>
+<l>    get_image_size (reflectance, reflectanceWidth, reflectanceHeight)</l>
+<c>    * Select the "Range" component (depth data) from the acquired data and store it to the variable "depthRaw".</c>
+<l>    select_obj(Image, depthRaw, 2)</l>
+<c>    * Set the "ChunkComponentSelector" parameter to "Range" to get the scaling factor and offset for the Z (depth) values. </c>
+<l>    set_framegrabber_param (AcqHandle, 'ChunkComponentSelector', 'Range')</l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateScale', scaleZ) </l>
+<l>    get_framegrabber_param (AcqHandle, 'ChunkScan3dCoordinateOffset', offsetZ)</l>
+<c>    * Transform the Z values using the scaling factor and offset.</c>
+<l>    convert_image_type(depthRaw, depthReal, 'real')</l>
+<c>    * Filter out the points with invalid depth values.</c>
+<l>    threshold(depthReal, validRegion, 1e-30, 65535)</l>
+<l>    reduce_domain(depthReal, validRegion, depthValid) </l>
+<c>    * Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
+<l>    scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<c>    * Clear the 3D object model stored in the variable "ObjectModel3D", preparing it for further processing or storage of new data. </c>
+<l>    clear_object_model_3d (ObjectModel3D)</l>
+<l>endwhile</l>
+<c></c>
+<c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
