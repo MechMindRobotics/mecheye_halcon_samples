@@ -77,7 +77,31 @@
 <l>    stop()</l>
 <l>endtry</l>
 <c></c>
+<l>set_framegrabber_param (AcqHandle, 'DeviceReset', 1)</l>
+<l>wait_seconds(180)</l>
+<c></c>
 <c>* Close the frame grabber.</c>
+<l>close_framegrabber (AcqHandle)</l>
+<c></c>
+<l>info_framegrabber ('GigEVision2', 'info_boards', Info, DeviceInfos)</l>
+<l>tuple_regexp_select(DeviceInfos, DeviceInfo, MechEyeProfilerInfos)</l>
+<l>dev_inspect_ctrl (MechEyeProfilerInfos)</l>
+<c>* Stop execution if no devices are found.</c>
+<l>if (not |MechEyeProfilerInfos|)</l>
+<l>    stop()</l>
+<l>endif</l>
+<c></c>
+<c>* Open the first found Mech-Eye Industrial 3D Camera.</c>
+<l>open_framegrabber ('GigEVision2', 1, 1, 0, 0, 0, 0, 'default', -1, 'default', -1, 'false', 'default', MechEyeProfilerInfos[0], 0, -1, AcqHandle)</l>
+<l>try </l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentIPConfigurationPersistentIP', GevCurrentIPConfigurationPersistentIP)</l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentIPAddress', CurrentIPAddress)</l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentSubnetMask', CurrentSubnetMask)</l>
+<l>    get_framegrabber_param (AcqHandle, 'GevCurrentDefaultGateway', CurrentDefaultGateway)</l>
+<l>catch (Exception)</l>
+<c>    * Parameter not supported.</c>
+<l>    stop()</l>
+<l>endtry</l>
 <l>close_framegrabber (AcqHandle)</l>
 <c></c>
 </body>

@@ -119,25 +119,54 @@
 <c>* Filter out the points with invalid depth values.</c>
 <l>threshold(depthReal, validRegion, 1e-30, 65535)</l>
 <l>reduce_domain(depthReal, validRegion, depthValid) </l>
-<c>* Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
-<l>scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<c></c>
 <c></c>
 <l>if (FirmwareVersion &gt; '2.3.1')</l>
-<c>    * Obtain the number of points in the point cloud.</c>
-<l>    get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
-<c>    * Check if the number of points is zero. If not, save the point cloud to the "PointCloud" PLY file.</c>
-<l>    if(NumOfPoints != 0)</l>
-<l>        write_object_model_3d (ObjectModel3D, 'ply', 'PointCloud.ply', [], [])</l>
-<c>        * Uncomment this function if you would like to retrieve the point cloud in the custom reference frame.</c>
-<c>        * The custom reference frame can be adjusted using the "Custom Reference Frame" tool in Mech-Eye</c>
-<c>        * Viewer. The rigid body transformations are automatically calculated after the settings in this</c>
-<c>        * tool have been applied. The "Custom Reference Frame" tool is recommended as the GUI allows you to</c>
-<c>        * adjust the reference frame easily and conveniently.</c>
-<l>        *if (FirmwareVersion &gt;= '2.4.0')</l>
-<l>        *    transformAndSavePointCloud(AcqHandle,ObjectModel3D) </l>
-<l>        *endif  </l>
+<l>    if (FirmwareVersion &gt;= '2.6.0')</l>
+<c>        * For firmware version 2.6.0 and above, the scaled depth map is in millimeters.</c>
+<l>        scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<c>        * Obtain the number of points in the point cloud.</c>
+<l>        get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
+<c>        * Check if the number of points is zero. If not, save the point cloud to PLY files.</c>
+<l>        if(NumOfPoints != 0)</l>
+<c>            * For firmware version 2.6.0 and above, HALCON exports the original point cloud in meters.</c>
+<l>            write_object_model_3d (ObjectModel3D, 'ply', 'PointCloudInM.ply', [], [])</l>
+<c>            * Convert the point cloud from meters to millimeters and save it to another PLY file.</c>
+<l>            scaleFactor := 1000</l>
+<l>            hom_mat3d_identity (HomMat3DIdentity)</l>
+<l>            hom_mat3d_scale (HomMat3DIdentity, scaleFactor, scaleFactor, scaleFactor, 0, 0, 0, HomMat3DUniform)</l>
+<l>            affine_trans_object_model_3d (ObjectModel3D, HomMat3DUniform, ObjectModel3DUniformScaled)</l>
+<l>            write_object_model_3d (ObjectModel3DUniformScaled, 'ply', 'PointCloudInMM.ply', [], [])</l>
+<c>            * Uncomment this function if you would like to retrieve the point cloud in the custom reference frame.</c>
+<c>            * The custom reference frame can be adjusted using the "Custom Reference Frame" tool in Mech-Eye</c>
+<c>            * Viewer. The rigid body transformations are automatically calculated after the settings in this</c>
+<c>            * tool have been applied. The "Custom Reference Frame" tool is recommended as the GUI allows you to</c>
+<c>            * adjust the reference frame easily and conveniently.</c>
+<c>            * The transformAndSavePointCloud procedure expects its input point cloud to already use millimeters.</c>
+<c>            * For firmware version 2.6.0 and above, pass ObjectModel3DUniformScaled instead of ObjectModel3D.</c>
+<l>*             if (FirmwareVersion &gt;= '2.4.0')</l>
+<l>*             transformAndSavePointCloud(AcqHandle,ObjectModel3DUniformScaled) </l>
+<l>*             endif  </l>
+<l>        endif</l>
+<l>    else</l>
+<c>        * For firmware versions earlier than 2.6.0, the scaled depth map is in micrometers.</c>
+<l>        scale_image(depthValid, depthInUM, scaleZ, offsetZ)</l>
+<c>        * Obtain the number of points in the point cloud.</c>
+<l>        get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
+<c>        * For firmware versions earlier than 2.6.0, HALCON exports the point cloud in millimeters.</c>
+<l>        if(NumOfPoints != 0)</l>
+<l>            write_object_model_3d (ObjectModel3D, 'ply', 'PointCloudInMM.ply', [], [])</l>
+<c>            * Uncomment this function if you would like to retrieve the point cloud in the custom reference frame.</c>
+<c>            * The custom reference frame can be adjusted using the "Custom Reference Frame" tool in Mech-Eye</c>
+<c>            * Viewer. The rigid body transformations are automatically calculated after the settings in this</c>
+<c>            * tool have been applied. The "Custom Reference Frame" tool is recommended as the GUI allows you to</c>
+<c>            * adjust the reference frame easily and conveniently.</c>
+<c>            * The transformAndSavePointCloud procedure expects its input point cloud to already use millimeters.</c>
+<l>*             if (FirmwareVersion &gt;= '2.4.0')</l>
+<l>*             transformAndSavePointCloud(AcqHandle,ObjectModel3D) </l>
+<l>*             endif  </l>
+<l>        endif</l>
 <l>    endif</l>
-<c>    </c>
 <c>    * Visualize the point cloud.</c>
 <c>    * Note: If the value of the "Height" parameter is greater than 32768, the visualization window cannot open, and the error with code 5122 will be raised.</c>
 <c>    * In that case, please deactivate the next three lines.</c>
@@ -145,6 +174,7 @@
 <l>    visualize_object_model_3d (WindowHandle3d, ObjectModel3D, [], [], [], [], [], [], [], PoseOut)</l>
 <l>    dev_close_window ()</l>
 <l>endif</l>
+<c></c>
 <c></c>
 <c>* Clear the 3D object model stored in the variable "ObjectModel3D", preparing it for further processing or storage of new data. </c>
 <l>clear_object_model_3d (ObjectModel3D)</l>
@@ -161,10 +191,12 @@
 <interface>
 <ic>
 <par name="AcqHandle" base_type="ctrl" dimension="0"/>
-<par name="ObjectModel3D" base_type="ctrl" dimension="0"/>
+<par name="ObjectModel3DUniformScaled" base_type="ctrl" dimension="0"/>
 </ic>
 </interface>
 <body>
+<c>* This procedure expects the input point cloud to already be expressed in millimeters.</c>
+<c>* For firmware version 2.6.0 and above, pass ObjectModel3DUniformScaled instead of ObjectModel3D.</c>
 <c>* Define a default transformation matrix.</c>
 <l>hom_mat3d_identity( HomMat3D )</l>
 <c>* Obtain the Euler angles and translation vector.</c>
@@ -191,14 +223,14 @@
 <c>* Add the translations to the HomMat3D matrix.</c>
 <l>hom_mat3d_translate( HomMat3D, Tx, Ty, Tz, HomMat3D)</l>
 <c>* Use the HomMat3D matrix to transform the 3D object model.</c>
-<l>affine_trans_object_model_3d(ObjectModel3D,HomMat3D,TransformedPointCloud)</l>
-<c>* Save the transformed point cloud to the "TransformedPointCloud" PLY file.</c>
-<l>write_object_model_3d (TransformedPointCloud, 'ply', 'TransformedPointCloud.ply', [], [])</l>
+<l>affine_trans_object_model_3d(ObjectModel3DUniformScaled,HomMat3D,TransformedPointCloud)</l>
+<c>* Save the transformed point cloud in millimeters.</c>
+<l>write_object_model_3d (TransformedPointCloud, 'ply', 'TransformedPointCloudInMM.ply', [], [])</l>
 </body>
 <docu id="transformAndSavePointCloud">
 <parameters>
 <parameter id="AcqHandle"/>
-<parameter id="ObjectModel3D"/>
+<parameter id="ObjectModel3DUniformScaled"/>
 </parameters>
 </docu>
 </procedure>

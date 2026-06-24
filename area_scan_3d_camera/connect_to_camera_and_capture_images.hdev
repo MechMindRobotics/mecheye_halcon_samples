@@ -72,8 +72,64 @@
 <l>if(find(ParameterValues, 'ProjectorFringeCodingMode') != -1)</l>
 <l>    set_framegrabber_param (AcqHandle, 'ProjectorFringeCodingMode', 'Fast')</l>
 <l>endif</l>
-<l>set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 1)</l>
-<l>set_framegrabber_param (AcqHandle, 'Scan3DExposureTime', 8)</l>
+<l>UseGrouped3dParams := (find(ParameterValues, 'GroupExposureSelector') != -1 and find(ParameterValues, 'GroupScan3DExposureTime') != -1)</l>
+<c>* Default values for 3D gain and projector/laser brightness.</c>
+<c>* Devices that use grouped exposure parameters (e.g., ULTRA M) require higher gain and brightness defaults.</c>
+<l>GainExp1 := 0.0</l>
+<l>GainExp2 := 0.0</l>
+<l>BrightnessExp1 := 70</l>
+<l>BrightnessExp2 := 55</l>
+<l>ProjectorBrightnessLevel := 'Normal'</l>
+<l>if(UseGrouped3dParams)</l>
+<l>    GainExp1 := 2.0</l>
+<l>    GainExp2 := 1.0</l>
+<l>    BrightnessExp1 := 80</l>
+<l>    BrightnessExp2 := 60</l>
+<l>endif</l>
+<l>if(BrightnessExp1 &gt;= 80)</l>
+<l>    ProjectorBrightnessLevel := 'High'</l>
+<l>elseif(BrightnessExp1 &lt;= 60)</l>
+<l>    ProjectorBrightnessLevel := 'Low'</l>
+<l>endif</l>
+<l>if(UseGrouped3dParams)</l>
+<l>    set_framegrabber_param (AcqHandle, 'GroupExposureSelector', 'Exposure1')</l>
+<l>    set_framegrabber_param (AcqHandle, 'GroupScan3DExposureTime', 8)</l>
+<l>    if(find(ParameterValues, 'GroupScan3DGain') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'GroupScan3DGain', GainExp1)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'GroupDlpPowerLevel') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'GroupDlpPowerLevel', BrightnessExp1)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'Scan3DExposureCount') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 1)</l>
+<l>    endif</l>
+<c>    * To use a second exposure group, set "Scan3DExposureCount" to 2 and configure the "Exposure2" parameters.</c>
+<c>    * set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 2)</c>
+<c>    * set_framegrabber_param (AcqHandle, 'GroupExposureSelector', 'Exposure2')</c>
+<c>    * set_framegrabber_param (AcqHandle, 'GroupScan3DExposureTime', 4)</c>
+<c>    * if(find(ParameterValues, 'GroupScan3DGain') != -1)</c>
+<c>    *     set_framegrabber_param (AcqHandle, 'GroupScan3DGain', GainExp2)</c>
+<c>    * endif</c>
+<c>    * if(find(ParameterValues, 'GroupDlpPowerLevel') != -1)</c>
+<c>    *     set_framegrabber_param (AcqHandle, 'GroupDlpPowerLevel', BrightnessExp2)</c>
+<c>    * endif</c>
+<l>else</l>
+<l>    if(find(ParameterValues, 'Scan3DExposureCount') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'Scan3DExposureCount', 1)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'Scan3DExposureTime') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'Scan3DExposureTime', 8)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'Scan3DGain') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'Scan3DGain', GainExp1)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'ProjectorPowerLevel') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'ProjectorPowerLevel', ProjectorBrightnessLevel)</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'LaserPowerLevel') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'LaserPowerLevel', BrightnessExp1)</l>
+<l>    endif</l>
+<l>endif</l>
 <c>* Set the "Depth Range" parameters (unit: mm).</c>
 <l>set_framegrabber_param (AcqHandle, 'DepthLowerLimit', 1)</l>
 <l>set_framegrabber_param (AcqHandle, 'DepthUpperLimit', 3000)</l>
@@ -81,13 +137,43 @@
 <c>* Different camera firmware versions have different "Point Cloud Processing" parameters.</c>
 <l>get_framegrabber_param (AcqHandle, 'DeviceFirmwareVersion', FirmwareVersion)</l>
 <l>if (FirmwareVersion &lt; '2.0.3')</l>
-<l>    set_framegrabber_param (AcqHandle, 'CloudOutlierFilterMode', 'Normal')</l>
-<l>    set_framegrabber_param (AcqHandle, 'CloudSmoothMode', 'Normal')</l>
+<l>    if(find(ParameterValues, 'CloudOutlierFilterMode') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'CloudOutlierFilterMode', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'CloudSmoothMode') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'CloudSmoothMode', 'Normal')</l>
+<l>    endif</l>
 <l>else</l>
-<l>    set_framegrabber_param (AcqHandle, 'PointCloudSurfaceSmoothing', 'Normal')</l>
-<l>    set_framegrabber_param (AcqHandle, 'PointCloudOutlierRemoval', 'Normal')</l>
-<l>    set_framegrabber_param (AcqHandle, 'PointCloudNoiseRemoval', 'Normal')</l>
-<l>    set_framegrabber_param (AcqHandle, 'PointCloudEdgePreservation', 'Normal')</l>
+<l>    if(find(ParameterValues, 'PointCloudSurfaceSmoothing') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'PointCloudSurfaceSmoothing', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'PointCloudNoiseRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'PointCloudNoiseRemoval', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'DepthSmooth') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'DepthSmooth', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'DepthHoleFilling') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'DepthHoleFilling', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'DepthSurfaceNoiseRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'DepthSurfaceNoiseRemoval', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'PhaseClusterOutlierRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'PhaseClusterOutlierRemoval', 'L5')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'SpuriousPhaseRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'SpuriousPhaseRemoval', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'LargeGradNoiseRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'LargeGradNoiseRemoval', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'PointCloudOutlierRemoval') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'PointCloudOutlierRemoval', 'Normal')</l>
+<l>    endif</l>
+<l>    if(find(ParameterValues, 'PointCloudEdgePreservation') != -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'PointCloudEdgePreservation', 'Normal')</l>
+<l>    endif</l>
 <l>endif</l>
 <c></c>
 <c>* Disable the "Intensity" component to avoid obtaining unneeded data.</c>

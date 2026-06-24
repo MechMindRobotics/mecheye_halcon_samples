@@ -167,6 +167,8 @@ set_framegrabber_param (AcqHandle, 'Scan3dCoordinateTransformEnable',false)
 
 Please follow these steps to perform the hand-eye calibration.
 
+> Note: In this sample, the image capture stage uses a 20-second timeout tolerance, while the extrinsic-parameter calculation stage keeps the existing 100-second timeout behavior.
+
 1. Run the sample by pressing the F5 key. The sample will stop when it runs to the `stop` operator.
 2. Move the robot to the calibration pose in the **robot_pose** JSON file.
 

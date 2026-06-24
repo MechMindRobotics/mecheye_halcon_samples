@@ -53,7 +53,7 @@
 <c>    * Set the "ComponentSelector" parameter to "Intensity" and the "ComponentEnable" parameter to "true" to enable the acquisition of the 2D image data.</c>
 <l>    set_framegrabber_param (AcqHandle, 'ComponentSelector', 'Intensity')</l>
 <l>    set_framegrabber_param (AcqHandle, 'ComponentEnable', true)   </l>
-<c>    * For the LSR (V4) and DEEP series, configure the "SourceSelector" parameter to obtain either the "2D image (texture)" or the "2D image (depth source)".</c>
+<c>    * For the LSR (V4), DEEP, and ULTRA M series, configure the "SourceSelector" parameter to obtain either the "2D image (texture)" or the "2D image (depth source)".</c>
 <c>    * "Color": obtain the "2D image (texture)" (default value)</c>
 <c>    * "Monochrome": obtain the "2D image (depth source)"</c>
 <l>    * set_framegrabber_param (AcqHandle, 'SourceSelector', 'Monochrome')</l>

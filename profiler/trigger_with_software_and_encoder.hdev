@@ -116,15 +116,32 @@
 <c>* Filter out the points with invalid depth values.</c>
 <l>threshold(depthReal, validRegion, 1e-30, 65535)</l>
 <l>reduce_domain(depthReal, validRegion, depthValid) </l>
-<c>* Scale the depth map using the "scaleZ" and "offsetZ" values, and store the scaled result to the variable "depthInMM".</c>
-<l>scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<l>if (FirmwareVersion &gt;= '2.6.0')</l>
+<c>    * For firmware version 2.6.0 and above, the scaled depth map is in millimeters.</c>
+<l>    scale_image(depthValid, depthInMM, scaleZ, offsetZ)</l>
+<l>else</l>
+<c>    * For firmware versions earlier than 2.6.0, the scaled depth map is in micrometers.</c>
+<l>    scale_image(depthValid, depthInUM, scaleZ, offsetZ)</l>
+<l>endif</l>
 <c></c>
 <l>if (FirmwareVersion &gt; '2.3.1')</l>
 <c>    * Obtain the number of points in the point cloud.</c>
 <l>    get_object_model_3d_params(ObjectModel3D, 'num_points', NumOfPoints)</l>
-<c>    * Check if the number of points is zero. If not, save the point cloud to the "PointCloud" PLY file.</c>
+<c>    * Check if the number of points is zero. If not, save the point cloud to PLY files.</c>
 <l>    if(NumOfPoints != 0)</l>
-<l>        write_object_model_3d (ObjectModel3D, 'ply', 'PointCloud.ply', [], [])</l>
+<l>        if (FirmwareVersion &gt;= '2.6.0')</l>
+<c>            * For firmware version 2.6.0 and above, HALCON exports the original point cloud in meters.</c>
+<l>            write_object_model_3d (ObjectModel3D, 'ply', 'PointCloudInM.ply', [], [])</l>
+<c>            * Convert the point cloud from meters to millimeters and save it to another PLY file.</c>
+<l>            scaleFactor := 1000</l>
+<l>            hom_mat3d_identity (HomMat3DIdentity)</l>
+<l>            hom_mat3d_scale (HomMat3DIdentity, scaleFactor, scaleFactor, scaleFactor, 0, 0, 0, HomMat3DUniform)</l>
+<l>            affine_trans_object_model_3d (ObjectModel3D, HomMat3DUniform, ObjectModel3DUniformScaled)</l>
+<l>            write_object_model_3d (ObjectModel3DUniformScaled, 'ply', 'PointCloudInMM.ply', [], [])</l>
+<l>        else</l>
+<c>            * For firmware versions earlier than 2.6.0, HALCON exports the point cloud in millimeters.</c>
+<l>            write_object_model_3d (ObjectModel3D, 'ply', 'PointCloudInMM.ply', [], [])</l>
+<l>        endif</l>
 <l>    endif</l>
 <c>    </c>
 <c>    * Visualize the point cloud.</c>

@@ -33,7 +33,7 @@
 <c></c>
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
-<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 10000)</l>
+<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
 <c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
 <c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
 <l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
@@ -123,7 +123,7 @@
 <l>wait_seconds(1)</l>
 <l>set_framegrabber_param (AcqHandle, 'CollectPatternOnce', 0)</l>
 <l>count_seconds(Start)</l>
-<l>timeout := 10</l>
+<l>timeout := 20</l>
 <l>while (1)</l>
 <l>    wait_seconds(0.5)</l>
 <l>    set_framegrabber_param (AcqHandle, 'UpdateCalibStatus', 0)</l>

@@ -34,9 +34,17 @@
 <c></c>
 <c>* Set the "DeviceScanType" parameter to "Areascan" to obtain the 2D image.</c>
 <l>set_framegrabber_param (AcqHandle, 'DeviceScanType', 'Areascan')</l>
+<c>* If the camera has an external 2D camera, use the 2D image (depth source) to determine calibration poses.</c>
+<l>get_framegrabber_param (AcqHandle, 'available_param_names', ParameterValues)</l>
+<l>if(find(ParameterValues, 'SourceSelector') &gt; -1)</l>
+<l>    get_framegrabber_param (AcqHandle, 'SourceSelector_values', sourceSelectorValues)</l>
+<l>    if(find(sourceSelectorValues,'Color') &gt; -1 and find(sourceSelectorValues,'Monochrome') &gt; -1)</l>
+<l>        set_framegrabber_param (AcqHandle, 'SourceSelector', 'Monochrome')</l>
+<l>    endif</l>
+<l>endif</l>
 <c>* Set the "grab_timeout" parameter.</c>
 <c>* The "grab_timeout" parameter defines the maximum time in milliseconds that the frame grabber will wait for an image to be grabbed before timing out.</c>
-<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 10000)</l>
+<l>set_framegrabber_param (AcqHandle, 'grab_timeout', 20000)</l>
 <c>* Set the "[Stream]GevStreamMaxBlockDuration" parameter to 70% of the "grab_timeout" parameter.</c>
 <c>* The "[Stream]GevStreamMaxBlockDuration" parameter defines the maximum transmission time for a data block in microseconds.</c>
 <l>get_framegrabber_param (AcqHandle, 'grab_timeout', grabTimeout)</l>
@@ -66,7 +74,7 @@
 <l>    endif</l>
 <l>    if (Char == 't'or Char =='T')</l>
 <l>        set_framegrabber_param (AcqHandle, 'Test Collect', true)</l>
-<l>        set_framegrabber_param (AcqHandle, 'UserSetLoad', 0)</l>
+<l>        set_framegrabber_param (AcqHandle, 'UpdateCalibStatus', 0)</l>
 <l>    endif</l>
 <l>endwhile</l>
 <l>set_framegrabber_param (AcqHandle, 'Test Collect', false)</l>
